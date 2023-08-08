@@ -1,0 +1,5 @@
+#!/usr/bin/env python3
+
+from mojafos import commandline
+
+commandline.interface.client()
