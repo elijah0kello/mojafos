@@ -438,6 +438,31 @@ Options:
 
 }
 
+function setup_k8s_cluster {
+        read -p "Would you like to use a remote Kubernetes cluster or a local one? (remote/local): " cluster_type
+
+        if [[ "$cluster_type" == "remote" ]]; then
+            echo "Verifying connection to the remote Kubernetes cluster..."
+            kubectl get pods >/dev/null 2>&1
+            if [[ $? -eq 0 ]]; then
+                echo "Successfully connected to the remote Kubernetes cluster."
+            else
+                echo "Failed to connect to the remote Kubernetes cluster. Please configure access to a remote cluster with kubectl to continue with a remote cluster."
+                echo "Otherwise,rerun the script and choose local"
+                exit 1
+            fi
+        elif [[ "$cluster_type" == "local" ]]; then
+            if [[ "$k8s_distro" == "microk8s" ]]; then
+                do_microk8s_install
+            else
+                do_k3s_install
+            fi
+        else
+            echo "Invalid choice. Please choose either 'remote' or 'local'."
+            exit 1
+        fi
+}
+
 ################################################################################
 # MAIN
 ################################################################################
@@ -500,7 +525,7 @@ function envSetupMain {
     set_user
     verify_user
 
-    if [[ "$mode" == "install" ]]  ; then
+    if [[ "$mode" == "deploy" ]]  ; then
         check_resources_ok
         set_k8s_distro
         set_k8s_version
@@ -509,11 +534,7 @@ function envSetupMain {
         check_os_ok # todo add check to this once tested across other OS's more fully
         install_prerequisites
         add_hosts
-        if [[ "$k8s_distro" == "microk8s" ]]; then
-            do_microk8s_install
-        else
-            do_k3s_install
-        fi
+        setup_k8s_cluster $k8s_distro
         install_k8s_tools
         add_helm_repos
         configure_k8s_user_env
@@ -523,7 +544,7 @@ function envSetupMain {
         printf "    To deploy mojaloop, please su - %s from root or login as user [%s] and then \n"  "$k8s_user" "$k8s_user"
         printf "    please execute %s/mojaloop-install.sh\n" "$SCRIPTS_DIR"
         print_end_message
-    elif [[ "$mode" == "delete" ]]  ; then
+    elif [[ "$mode" == "cleanup" ]]  ; then
         delete_k8s
         print_end_message
     else

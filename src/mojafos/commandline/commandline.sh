@@ -47,12 +47,12 @@ function main {
   welcome 
   getoptions "$@"
   echo "Setting up kubernetes and other deployment utilities for Mojaloop, PaymentHub EE and Apache Fineract"
-  if [ $mode == "install" ]; then
+  if [ $mode == "deploy" ]; then
     envSetupMain -m install -k k3s -v 1.26
-  elif [ $mode == "delete" ]; then
+  elif [ $mode == "cleanup" ]; then
     envSetupMain -m delete -k k3s -v 1.26
   else
-    echo "TODO: Print Usage"
+    showUsage
   fi
 }
 
