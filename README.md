@@ -20,3 +20,22 @@ The Deployable Package will perform the following tasks:
 - Provide status updates on the deployment process.
 - Deploy infrastructure in a single namespace
 - Check the health of each deployed application to see if it is ready to serve requests.
+
+## Usage 
+
+`deploy` : Set up the kubernetes environment, deploy infrastructure and deploy the applications (mojaloop, paymenthub, and fineract).
+
+`health-check-interval <seconds>` : Set the interval between health checks during deployment.
+
+`check-infra` : Check the health status of the deployed infrastructure components.
+
+`check-apps` : Check the health status of the deployed applications (mojaloop, paymenthub, fineract).
+
+Options:
+`--<app-name>` : Provide the name of the application to check. e.g paymenthub, fineract or mojaloop
+
+`cleanup` : Remove all deployed resources and clean up the environment.
+
+`show-config`: Display the current configuration settings of the tool.
+
+`help` or `-h`: Display the help message with information about available commands and options.
