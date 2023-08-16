@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ../environmentSetup/environmentSetup.sh
+
 function welcome() {
   echo -e "███    ███  ██████       ██  █████  ███████  ██████  ███████ "
   echo -e "████  ████ ██    ██      ██ ██   ██ ██      ██    ██ ██      "
