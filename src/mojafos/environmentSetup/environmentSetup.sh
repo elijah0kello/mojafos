@@ -31,7 +31,7 @@ function check_pi {
 
 function check_arch_ok {
     if [[ ! "$k8s_arch" == "x86_64" ]]; then
-        printf " **** Warning : mini-loop only works properly with x86_64 today but vNext should be ok *****\n"
+        printf " **** Warning : mojafos only works properly with x86_64 today but vNext should be ok *****\n"
     fi
 }
 
@@ -43,15 +43,15 @@ function check_resources_ok {
 
     # Check RAM
     if [[ "$total_ram" -lt "$MIN_RAM" ]]; then
-        printf " ** Error : mini-loop currently requires $MIN_RAM GBs to run properly \n"
-        printf "    Please increase RAM available before trying to run mini-loop \n"
+        printf " ** Error : mojafos currently requires $MIN_RAM GBs to run properly \n"
+        printf "    Please increase RAM available before trying to run mojafos \n"
         exit 1
     fi
     # Check free space
         if [[  "$free_space" -lt "$MIN_FREE_SPACE" ]] ; then
-        printf " ** Warning : mini-loop currently requires %sGBs free storage in %s home directory  \n"  "$MIN_FREE_SPACE" "$k8s_user"
+        printf " ** Warning : mojafos currently requires %sGBs free storage in %s home directory  \n"  "$MIN_FREE_SPACE" "$k8s_user"
         printf "    but only found %sGBs free storage \n"  "$free_space"
-        printf "    mini-loop installation will continue , but beware it might fail later due to insufficient storage \n"
+        printf "    mojafos installation will continue , but beware it might fail later due to insufficient storage \n"
     fi
 }
 
@@ -85,11 +85,11 @@ function set_linux_os_distro {
 }
 
 function check_os_ok {
-    printf "==> checking OS and kubernetes distro is tested with mini-loop scripts\n"
+    printf "==> checking OS and kubernetes distro is tested with mojafos scripts\n"
     set_linux_os_distro
 
     if [[ ! $LINUX_OS == "Ubuntu" ]]; then
-        printf "** Error , mini-loop $MINILOOP_VERSION is only tested with Ubuntu OS at this time   **\n"
+        printf "** Error , mojafos $MINILOOP_VERSION is only tested with Ubuntu OS at this time   **\n"
         exit 1
     fi
 }
@@ -110,7 +110,7 @@ function install_prerequisites {
 }
 
 function add_hosts {
-    printf "==> Mojaloop k8s install : update hosts file \n"
+    printf "==> Mojafos k8s install : update hosts file \n"
     ENDPOINTSLIST=(127.0.0.1   ml-api-adapter.local central-ledger.local account-lookup-service.local account-lookup-service-admin.local
     quoting-service.local central-settlement-service.local transaction-request-service.local central-settlement.local bulk-api-adapter.local
     moja-simulator.local sim-payerfsp.local sim-payeefsp.local sim-testfsp1.local sim-testfsp2.local sim-testfsp3.local sim-testfsp4.local
@@ -153,7 +153,7 @@ function set_k8s_version {
     # printf "========================================================================================\n"
     # printf " set the k8s version to install  \n"
     # printf "========================================================================================\n\n"
-    # Users who want to run non-current versions of kubernetes will need to use earlier releases of mini-loop and
+    # Users who want to run non-current versions of kubernetes will need to use earlier releases of mojafos and
     # and be aware that these are not being actively maintained
     if [ ! -z ${k8s_user_version+x} ] ; then
         # strip off any leading characters
@@ -324,8 +324,8 @@ function add_helm_repos {
 }
 
 function configure_k8s_user_env {
-    start_message="# ML_START start of config added by mini-loop #"
-    grep "start of config added by mini-loop" $k8s_user_home/.bashrc >/dev/null 2>&1
+    start_message="# ML_START start of config added by mojafos #"
+    grep "start of config added by mojafos" $k8s_user_home/.bashrc >/dev/null 2>&1
     if [[ $? -ne 0  ]]; then
         printf "==> Adding configuration for %s to %s .bashrc\n" "$k8s_distro" "$k8s_user"
         printf "%s\n" "$start_message" >> $k8s_user_home/.bashrc
@@ -334,8 +334,8 @@ function configure_k8s_user_env {
         echo "complete -F __start_kubectl k " >>  $k8s_user_home/.bashrc
         echo "alias ksetns=\"kubectl config set-context --current --namespace\" " >>  $k8s_user_home/.bashrc
         echo "alias ksetuser=\"kubectl config set-context --current --user\" "  >>  $k8s_user_home/.bashrc
-        echo "alias cdml=\"cd $k8s_user_home/mini-loop\" " >>  $k8s_user_home/.bashrc
-        printf "#ML_END end of config added by mini-loop #\n" >> $k8s_user_home/.bashrc
+        echo "alias cdml=\"cd $k8s_user_home/mojafos\" " >>  $k8s_user_home/.bashrc
+        printf "#ML_END end of config added by mojafos #\n" >> $k8s_user_home/.bashrc
     else
         printf "==> Configuration for .bashrc for %s for user %s already exists ..skipping\n" "$k8s_distro" "$k8s_user"
     fi
@@ -406,7 +406,7 @@ function check_k8s_installed {
 
 function print_end_message {
     printf "\n\n*********************** << success >> *******************************************\n"
-    printf "            -- mini-loop kubernetes install utility -- \n"
+    printf "            -- mojafos kubernetes install utility -- \n"
     printf "  utilities for deploying kubernetes in preparation for Mojaloop deployment   \n"
     printf "************************** << end  >> *******************************************\n\n"
 }
@@ -424,115 +424,113 @@ function showUsage {
 		exit 1
 	else
 echo  "USAGE: $0 -m [mode] -u [user] -v [k8 version] -k [distro] [-f]
-Example 1 : k8s-install-current.sh -m install -v 1.25 # install k8s k3s version 1.24
-Example 2 : k8s-install-current.sh -m delete  -v 1.26 # delete  k8s microk8s version 1.26
-Example 3 : k8s-install-current.sh -m install -k microk8s -v 1.26 # install k8s microk8s distro version 1.26
+Example 1 : run -m install -v 1.25 -k k3s # install k8s k3s version 1.24
+Example 2 : run -m delete  -v 1.26 -k microk8s # delete  k8s microk8s version 1.26
+Example 3 : run -m install -k microk8s -v 1.26 -k k3s # install k8s microk8s distro version 1.26
 
 Options:
 -m mode ............... install|delete (-m is required)
 -k kubernetes distro... microk8s|k3s (default=k3s as it installs across multiple linux distros)
--v k8s version ........ 1.24|1.25|1.26 i.e. current k8s releases at time if this mini-loop release
+-v k8s version ........ 1.24|1.25|1.26 i.e. current k8s releases at time if this mojafos release
 -h|H .................. display this message
 "
 	fi
+
 }
 
 ################################################################################
 # MAIN
 ################################################################################
+function envSetupMain {
 
-BASE_DIR=$( cd $(dirname "$0")/../.. ; pwd )
-RUN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" # the directory that this script is run from
-SCRIPTS_DIR="$( cd $(dirname "$0")/../scripts ; pwd )"
+    BASE_DIR=$( cd $(dirname "$0")/../.. ; pwd )
+    RUN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" # the directory that this script is run from
 
-DEFAULT_K8S_DISTRO="k3s"   # default to microk8s as this is what is in the mojaloop linux deploy docs.
-K8S_VERSION=""
-MINILOOP_VERSION="vNext"
+    DEFAULT_K8S_DISTRO="k3s"   # default to microk8s as this is what is in the mojaloop linux deploy docs.
+    K8S_VERSION=""
+    MINILOOP_VERSION="vNext"
 
-HELM_VERSION="3.12.0"  # Feb 2023
-OS_VERSIONS_LIST=( 20 22 )
-K8S_CURRENT_RELEASE_LIST=( "1.26" "1.27" )
-CURRENT_RELEASE="false"
-k8s_user_home=""
-k8s_arch=`uname -p`  # what arch
-# Set the minimum amount of RAM in GB
-MIN_RAM=4
-MIN_FREE_SPACE=30
-LINUX_OS_LIST=( "Ubuntu" )
-UBUNTU_OK_VERSIONS_LIST=(20 22)
+    HELM_VERSION="3.12.0"  # Feb 2023
+    OS_VERSIONS_LIST=( 20 22 )
+    K8S_CURRENT_RELEASE_LIST=( "1.26" "1.27" )
+    CURRENT_RELEASE="false"
+    k8s_user_home=""
+    k8s_arch=`uname -p`  # what arch
+    # Set the minimum amount of RAM in GB
+    MIN_RAM=4
+    MIN_FREE_SPACE=30
+    LINUX_OS_LIST=( "Ubuntu" )
+    UBUNTU_OK_VERSIONS_LIST=(20 22)
 
-# ensure we are running as root
-if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
-  exit 1
-fi
-
-# Check arguments
-if [ $# -lt 1 ] ; then
-	showUsage
-	echo "Not enough arguments -m mode must be specified "
-	exit 1
-fi
-
-# Process command line options as required
-while getopts "m:k:v:u:hH" OPTION ; do
-   case "${OPTION}" in
-        m)	    mode="${OPTARG}"
-        ;;
-        k)      k8s_distro="${OPTARG}"
-        ;;
-        v)	    k8s_user_version="${OPTARG}"
-        # ;;
-        # u)      k8s_user="${OPTARG}"
-        ;;
-        h|H)	showUsage
-                exit 0
-        ;;
-        *)	echo  "unknown option"
-                showUsage
-                exit 1
-        ;;
-    esac
-done
-
-printf "\n\n*********************************************************************************\n"
-printf "            -- mini-loop kubernetes install utility -- \n"
-printf "  utilities for deploying kubernetes in preparation for Mojaloop deployment \n"
-printf "************************* << start >> *******************************************\n\n"
-
-check_arch_ok
-set_user
-verify_user
-
-if [[ "$mode" == "install" ]]  ; then
-    check_resources_ok
-    set_k8s_distro
-    set_k8s_version
-    k8s_already_installed
-    check_pi  # note microk8s on my pi still has some issues around cgroups
-    check_os_ok # todo add check to this once tested across other OS's more fully
-    install_prerequisites
-    add_hosts
-    if [[ "$k8s_distro" == "microk8s" ]]; then
-        do_microk8s_install
-    else
-        do_k3s_install
+    # ensure we are running as root
+    if [ "$EUID" -ne 0 ]
+    then echo "Please run as root"
+    exit 1
     fi
-    install_k8s_tools
-    add_helm_repos
-    configure_k8s_user_env
-    check_k8s_installed
-    printf "==> kubernetes distro:[%s] version:[%s] is now configured for user [%s] and ready for mojaloop deployment \n" \
-                "$k8s_distro" "$K8S_VERSION" "$k8s_user"
-    printf "    To deploy mojaloop, please su - %s from root or login as user [%s] and then \n"  "$k8s_user" "$k8s_user"
-    printf "    please execute %s/mojaloop-install.sh\n" "$SCRIPTS_DIR"
-    print_end_message
-elif [[ "$mode" == "delete" ]]  ; then
-    delete_k8s
-    print_end_message
-else
-    showUsage
-fi
+
+    # Check arguments
+    if [ $# -lt 1 ] ; then
+        showUsage
+        echo "Not enough arguments -m mode must be specified "
+        exit 1
+    fi
+
+    # Process command line options as required
+    while getopts "m:k:v:u:hH" OPTION ; do
+    case "${OPTION}" in
+            m)	    mode="${OPTARG}"
+            ;;
+            k)      k8s_distro="${OPTARG}"
+            ;;
+            v)	    k8s_user_version="${OPTARG}"
+            # ;;
+            # u)      k8s_user="${OPTARG}"
+            ;;
+            h|H)	showUsage
+                    exit 0
+            ;;
+            *)	echo  "unknown option"
+                    showUsage
+                    exit 1
+            ;;
+        esac
+    done
+
+    check_arch_ok
+    set_user
+    verify_user
+
+    if [[ "$mode" == "install" ]]  ; then
+        check_resources_ok
+        set_k8s_distro
+        set_k8s_version
+        k8s_already_installed
+        check_pi  # note microk8s on my pi still has some issues around cgroups
+        check_os_ok # todo add check to this once tested across other OS's more fully
+        install_prerequisites
+        add_hosts
+        if [[ "$k8s_distro" == "microk8s" ]]; then
+            do_microk8s_install
+        else
+            do_k3s_install
+        fi
+        install_k8s_tools
+        add_helm_repos
+        configure_k8s_user_env
+        check_k8s_installed
+        printf "==> kubernetes distro:[%s] version:[%s] is now configured for user [%s] and ready for mojaloop deployment \n" \
+                    "$k8s_distro" "$K8S_VERSION" "$k8s_user"
+        printf "    To deploy mojaloop, please su - %s from root or login as user [%s] and then \n"  "$k8s_user" "$k8s_user"
+        printf "    please execute %s/mojaloop-install.sh\n" "$SCRIPTS_DIR"
+        print_end_message
+    elif [[ "$mode" == "delete" ]]  ; then
+        delete_k8s
+        print_end_message
+    else
+        showUsage
+    fi
+}
+
 
 
 
