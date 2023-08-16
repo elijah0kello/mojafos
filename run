@@ -1,7 +1,6 @@
 #!/bin/bash
 
 source ./src/mojafos/commandline/commandline
-source ./src/mojafos/environmentSetup/environmentSetup.sh
 
 welcome
 create_kubernetes_cluster
