@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ../environmentSetup/environmentSetup.sh
+source ./src/mojafos/environmentSetup/environmentSetup.sh
 
 function welcome() {
   echo -e "███    ███  ██████       ██  █████  ███████  ██████  ███████ "
