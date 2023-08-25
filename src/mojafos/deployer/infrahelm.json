@@ -1,0 +1,9 @@
+[
+  {
+    "repo_link": "https://charts.example.com",
+    "repo_name": "elastic",
+    "chart_name": "elasticsearch",
+    "release_name": "elastic",
+    "values": "resources.requests.cpu=1m,resources.requests.memory=128M,antiAffinity=soft"
+  }
+]

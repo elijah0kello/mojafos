@@ -281,6 +281,9 @@ function install_k8s_tools {
 
 function add_helm_repos {
     # see readme at https://github.com/mojaloop/helm for required helm libs
+    printf "${BLUE}==> add the helm repos required to install and run infrastructure for Mojaloop, Paymenthub EE and Fineract${RESET}\n"
+    su - $k8s_user -c "helm repo add elastic https://helm.elastic.co" > /dev/null 2>&1
+
     printf "==> add the helm repos required to install and run Mojaloop version 13.x \n"
     su - $k8s_user -c "helm repo add kiwigrid https://kiwigrid.github.io" > /dev/null 2>&1
     su - $k8s_user -c "helm repo add kokuwa https://kokuwaio.github.io/helm-charts" > /dev/null 2>&1  #fluentd
