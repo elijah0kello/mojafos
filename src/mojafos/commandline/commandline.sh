@@ -58,7 +58,6 @@ function main {
   if [ $mode == "deploy" ]; then
     envSetupMain -m install -k k3s -v 1.26
     createInfrastructureNamespace
-    installInfraCRDS
     deployInfrastructure
   elif [ $mode == "cleanup" ]; then
     envSetupMain -m delete -k k3s -v 1.26
