@@ -57,8 +57,8 @@ function main {
   echo "Setting up kubernetes and other deployment utilities for Mojaloop, PaymentHub EE and Apache Fineract"
   if [ $mode == "deploy" ]; then
     envSetupMain -m install -k k3s -v 1.26
-    createInfrastructureNamespace
     deployInfrastructure
+    deployApps
   elif [ $mode == "cleanup" ]; then
     envSetupMain -m delete -k k3s -v 1.26
   else

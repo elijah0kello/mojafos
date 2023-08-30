@@ -1,19 +1,8 @@
 #!/usr/bin/env bash
-########################################################################
-# GLOBAL VARS
-########################################################################
-INFRA_NAMESPACE="infra"
-INFRA_RELEASE_NAME="mojafos-infra"
-MOJALOOPBRANCH="main"
-MOJALOOPREPO_DIR="mojaloop-utils"
 
-function installInfraCRDS() {
-  printf "Installing CRDs for elastic search \n"
-  kubectl create -f https://download.elastic.co/downloads/eck/2.9.0/crds.yaml
-  kubectl apply -f https://download.elastic.co/downloads/eck/2.9.0/operator.yaml -n "$INFRA_NAMESPACE"
-}
+source ./src/mojafos/configurationManager/config.sh
 
-function deploy_helm_chart() {
+function deployHelmChart() {
   # Check if Helm is installed
   if ! command -v helm &>/dev/null; then
     echo "Helm is not installed. Please install Helm first."
@@ -43,115 +32,118 @@ function deploy_helm_chart() {
   cd - || exit 1
 }
 
-########################################################################
-# Deploy Helm charts to a specified namespace
-########################################################################
-function deployInfraCharts() {
-  # Specify the path to the JSON file
-  local json_file="./src/mojafos/deployer/infrahelm.json"
-
-  # Check if jq is installed
-  if ! command -v jq &>/dev/null; then
-    echo "jq is not installed. Please install it to run this script."
-    exit 1
-  fi
-
-  # Check if the JSON file exists
-  if [ ! -f "$json_file" ]; then
-    echo "JSON file not found: $json_file"
-    exit 1
-  fi
-
-  # Read and iterate through the JSON file
-  while IFS= read -r chart_data; do
-    repo=$(echo "$chart_data" | jq -r '.repo_link')
-    repo_name=$(echo "$chart_data" | jq -r '.repo_name')
-    release_name=$(echo "$chart_data" | jq -r '.release_name')
-    chart=$(echo "$chart_data" | jq -r '.chart_name')
-    values=$(echo "$chart_data" | jq -r '.values')
-    enabled=$(echo "$chart_data" | jq -r '.enabled')
-
-    echo "Repo: $repo"
-    echo "Chart: $chart"
-    echo "Release: $release_name"
-    echo "Repo Name: $repo_name"
-    echo "Values:"
-    echo "$values"
-    echo "Enabled: $enabled"
-
-    if [ "$enabled" == true ]; then
-      echo "Deploying chart from $repo_name to namespace $INFRA_NAMESPACE..."
-
-      helm repo add "$repo_name" "$repo"  # Add the remote repository (replace "repo-name" with a suitable name)
-      helm repo update
-
-      # Install the charts from the repository into the specified namespace
-      if [ -z "$values" ]; then
-          echo "No Values present"
-          helm install "$release_name" "$repo_name/$chart" --namespace "$INFRA_NAMESPACE"
-      else
-          echo "Values present"
-          helm install "$release_name" "$repo_name/$chart" --set "$values" --namespace "$INFRA_NAMESPACE"
-      fi
-
-      if [ $? -eq 0 ]; then
-          echo "Charts from $repo deployed successfully."
-      else
-          echo "Failed to deploy charts from $repo."
-      fi
-
-      echo "----------------------"
-    else
-      echo "Chart $chart not enabled. Skipping..."
-    fi
-  done < <(jq -c '.[]' "$json_file")
-}
-
-########################################################################
-# Create Infrastructure namespace
-########################################################################
-function createInfrastructureNamespace () {
-  printf "Creating Infrastructure namespace called infra \n"
+function createNamespace () {
+  local namespace=$1
+  printf "Creating namespace $namespace \n"
   # Check if the namespace already exists
-  if kubectl get namespace "$INFRA_NAMESPACE" > /dev/null 2>&1; then
-      echo -e "${RED}Namespace $INFRA_NAMESPACE already exists.${RESET}"
+  if kubectl get namespace "$namespace" > /dev/null 2>&1; then
+      echo -e "${RED}Namespace $namespace already exists.${RESET}"
       exit 1
   fi
 
   # Create the namespace
-  kubectl create namespace "$INFRA_NAMESPACE"
+  kubectl create namespace "$namespace"
   if [ $? -eq 0 ]; then
-      echo -e "${GREEN}Namespace $INFRA_NAMESPACE created successfully. ${RESET}"
+      echo -e "${GREEN}Namespace $namespace created successfully. ${RESET}"
   else
-      echo "Failed to create namespace $INFRA_NAMESPACE."
+      echo "Failed to create namespace $namespace."
   fi
 }
 
-function testInfra() {
-  echo "Testing Infra"
-}
-
-########################################################################
-# Deploy Infrastructure to infra namespace
-########################################################################
 function deployInfrastructure () {
-    printf "Deploying infrastructure \n"
-#    deployInfraCharts
-    deploy_helm_chart "./src/mojafos/deployer/helm/infra"
+  printf "Deploying infrastructure \n"
+  createNamespace $INFRA_NAMESPACE
+  deployHelmChart "./src/mojafos/deployer/helm/infra"
 }
 
-function cloneMojaloopRepo() {
-  echo -e "Cloning Mojaloop repository"
-  git clone --branch $MOJALOOPBRANCH https://github.com/mojaloop/platform-shared-tools.git $MOJALOOPREPO_DIR > /dev/null 2>&1
+function cloneRepo() {
+  if [ "$#" -ne 4 ]; then
+      echo "Usage: clone_repo <branch> <repo_link> <target_directory> <cloned_directory_name>"
+      return 1
+  fi
+
+  # Store the current working directory
+  original_dir="$(pwd)"
+
+  branch="$1"
+  repo_link="$2"
+  target_directory="$3"
+  cloned_directory_name="$4"
+
+  # Check if the target directory exists; if not, create it.
+  if [ ! -d "$target_directory" ]; then
+      mkdir -p "$target_directory"
+  fi
+
+  # Change to the target directory.
+  cd "$target_directory" || return 1
+
+  # Clone the repository with the specified branch into the specified directory.
+  if [ -d "$cloned_directory_name" ]; then
+    echo -e "${YELLOW}$cloned_directory_name Repo exists deleting and re-cloning ${RESET}"
+    rm -rf "$cloned_directory_name"
+    git clone -b "$branch" "$repo_link" "$cloned_directory_name"
+  else
+    git clone -b "$branch" "$repo_link" "$cloned_directory_name"
+  fi
+
+  if [ $? -eq 0 ]; then
+      echo "Repository cloned successfully."
+  else
+      echo "Failed to clone the repository."
+  fi
+
+  # Change back to the original directory
+  cd "$original_dir" || return 1
+}
+
+function applyKubeManifests() {
+    if [ "$#" -ne 2 ]; then
+        echo "Usage: applyKubeManifests <directory> <namespace>"
+        return 1
+    fi
+
+    local directory="$1"
+    local namespace="$2"
+
+    # Check if the directory exists.
+    if [ ! -d "$directory" ]; then
+        echo "Directory '$directory' not found."
+        return 1
+    fi
+
+    # Use 'kubectl apply' to apply manifests in the specified directory.
+    kubectl apply -f "$directory" -n "$namespace"
+
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}Kubernetes manifests applied successfully.${RESET}"
+    else
+        echo -e "${RED}Failed to apply Kubernetes manifests.${RESET}"
+    fi
 }
 
 function deployMojaloop(){
   echo "Deploying Mojaloop vNext application manifests"
+  createNamespace "$MOJALOOP_NAMESPACE"
+  cloneRepo "$MOJALOOPBRANCH" "$MOJALOOP_REPO_LINK" "$APPS_DIR" "$MOJALOOPREPO_DIR"
 
+  for index in "${!MOJALOOP_LAYER_DIRS[@]}"; do
+    folder="${MOJALOOP_LAYER_DIRS[index]}"
+    echo "Deploying files in $folder"
+    applyKubeManifests "$folder" "$MOJALOOP_NAMESPACE"
+  done
+}
+
+function deployPaymentHubEE() {
+  echo "Deploying PaymentHub EE"
+  createNamespace ""
+}
+
+function deployFineract() {
+  echo "Deploying Fineract"
 }
 
 function deployApps(){
   echo -e "${BLUE} Deploying Apps ...${RESET}"
-  echo -e "${BLUE} Deploying Mojaloop ... ${RESET}"
   deployMojaloop
 }
