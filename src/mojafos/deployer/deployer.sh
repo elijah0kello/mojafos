@@ -2,7 +2,7 @@
 
 source ./src/mojafos/configurationManager/config.sh
 
-function deployHelmChart() {
+function deployHelmChartFromDir() {
   # Check if Helm is installed
   if ! command -v helm &>/dev/null; then
     echo "Helm is not installed. Please install Helm first."
@@ -10,26 +10,58 @@ function deployHelmChart() {
   fi
 
   # Check if the chart directory exists
-  chart_dir="$1"
+  local chart_dir="$1"
+  local namespace="$2"
+  local release_name="$3"
   if [ ! -d "$chart_dir" ]; then
     echo "Chart directory '$chart_dir' does not exist."
     exit 1
   fi
 
+  # Check if a values file has been provided
+  values_file="$4"
+
   # Enter the chart directory
   cd "$chart_dir" || exit 1
 
-  # Determine whether to install or upgrade the chart
-  if helm list -n "$INFRA_NAMESPACE" | grep -q "$INFRA_RELEASE_NAME"; then
-    echo "Upgrading Helm chart..."
-    helm upgrade --install "$INFRA_RELEASE_NAME" . -n "$INFRA_NAMESPACE"
+  # Run helm dependency update to fetch dependencies
+  echo "Updating Helm chart dependencies..."
+  helm dependency update
+
+  # Run helm dependency build
+  echo "Building Helm chart dependencies..."
+  helm dependency build .
+
+  # Determine whether to install or upgrade the chart also check whether to apply a values file
+  if [ -n "$values_file" ]; then
+    if helm list -n "$namespace" | grep -q "$release_name"; then
+      echo "Upgrading Helm chart..."
+      helm upgrade --install "$release_name" . -n "$namespace" -f "$values_file"
+    else
+      echo "Installing Helm chart..."
+      helm install "$release_name" . -n "$namespace" -f "$values_file"
+    fi
   else
-    echo "Installing Helm chart..."
-    helm install "$INFRA_RELEASE_NAME" . -n "$INFRA_NAMESPACE"
+    if helm list -n "$namespace" | grep -q "$release_name"; then
+      echo "Upgrading Helm chart..."
+      helm upgrade --install "$release_name" . -n "$namespace"
+    else
+      echo "Installing Helm chart..."
+      helm install "$release_name" . -n "$namespace"
+    fi
+  fi
+
+  # Check if the deployment was successful
+  if [ $? -eq 0 ]; then
+    echo "Helm chart deployed successfully."
+  else
+    echo "Helm chart deployment failed."
+    return 1
   fi
 
   # Exit the chart directory
   cd - || exit 1
+
 }
 
 function createNamespace () {
@@ -53,12 +85,12 @@ function createNamespace () {
 function deployInfrastructure () {
   printf "Deploying infrastructure \n"
   createNamespace $INFRA_NAMESPACE
-  deployHelmChart "./src/mojafos/deployer/helm/infra"
+  deployHelmChartFromDir "./src/mojafos/deployer/helm/infra" "$INFRA_NAMESPACE" "$INFRA_RELEASE_NAME"
 }
 
 function cloneRepo() {
   if [ "$#" -ne 4 ]; then
-      echo "Usage: clone_repo <branch> <repo_link> <target_directory> <cloned_directory_name>"
+      echo "Usage: cloneRepo <branch> <repo_link> <target_directory> <cloned_directory_name>"
       return 1
   fi
 
@@ -122,10 +154,11 @@ function applyKubeManifests() {
     fi
 }
 
-function deployMojaloop(){
+function deployMojaloop() {
   echo "Deploying Mojaloop vNext application manifests"
   createNamespace "$MOJALOOP_NAMESPACE"
   cloneRepo "$MOJALOOPBRANCH" "$MOJALOOP_REPO_LINK" "$APPS_DIR" "$MOJALOOPREPO_DIR"
+  configureMojaloop
 
   for index in "${!MOJALOOP_LAYER_DIRS[@]}"; do
     folder="${MOJALOOP_LAYER_DIRS[index]}"
@@ -136,14 +169,27 @@ function deployMojaloop(){
 
 function deployPaymentHubEE() {
   echo "Deploying PaymentHub EE"
-  createNamespace ""
+  createNamespace "$PH_NAMESPACE"
+  cloneRepo "$PHBRANCH" "$PH_REPO_LINK" "$APPS_DIR" "$PHREPO_DIR"
+  configurePH "$APPS_DIR$PHREPO_DIR/helm"
+  deployHelmChartFromDir "$APPS_DIR$PHREPO_DIR/helm/g2p-sandbox-fynarfin-SIT" "$PH_NAMESPACE" "$PH_RELEASE_NAME" "$PH_VALUES_FILE"
+
+  if [ $? -eq 1 ];then
+    deployHelmChartFromDir "$APPS_DIR$PHREPO_DIR/helm/g2p-sandbox-fynarfin-SIT" "$PH_NAMESPACE" "$PH_RELEASE_NAME" "$PH_VALUES_FILE"
+  fi
 }
 
 function deployFineract() {
   echo "Deploying Fineract"
+  createNamespace "$FIN_NAMESPACE"
+  cloneRepo "$FIN_BRANCH" "$FIN_REPO_LINK" "$APPS_DIR" "$FIN_REPO_DIR"
+  configureFineract
+  deployHelmChartFromDir "$APPS_DIR$FIN_REPO_DIR/helm/fineract" "$FIN_NAMESPACE" "$FIN_RELEASE_NAME" "$FIN_VALUES_FILE"
 }
 
 function deployApps(){
-  echo -e "${BLUE} Deploying Apps ...${RESET}"
+  echo -e "${BLUE}Deploying Apps ...${RESET}"
   deployMojaloop
+#  deployPaymentHubEE
+#  deployFineract
 }

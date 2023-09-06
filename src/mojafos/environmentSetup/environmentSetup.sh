@@ -77,6 +77,32 @@ function install_prerequisites {
             printf "   install snapd\n"
             apt install snapd -y > /dev/null 2>&1
         fi
+
+      # Check if Docker is installed
+      if ! command -v docker &> /dev/null; then
+          echo "Docker is not installed. Installing Docker..."
+
+          # Update package index and install prerequisites
+          sudo apt update
+          sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+
+          # Add Docker GPG key
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+          # Add Docker repository
+          echo "deb [signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+          # Update package index again and install Docker
+          sudo apt update
+          sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+          # Add your user to the docker group (optional)
+          sudo usermod -aG docker $USER
+
+          echo "Docker has been installed."
+      else
+          echo "Docker is already installed."
+      fi
     fi
 }
 
@@ -282,9 +308,6 @@ function install_k8s_tools {
 function add_helm_repos {
     # see readme at https://github.com/mojaloop/helm for required helm libs
     printf "${BLUE}==> add the helm repos required to install and run infrastructure for Mojaloop, Paymenthub EE and Fineract${RESET}\n"
-    su - $k8s_user -c "helm repo add elastic https://helm.elastic.co" > /dev/null 2>&1
-
-    printf "==> add the helm repos required to install and run Mojaloop version 13.x \n"
     su - $k8s_user -c "helm repo add kiwigrid https://kiwigrid.github.io" > /dev/null 2>&1
     su - $k8s_user -c "helm repo add kokuwa https://kokuwaio.github.io/helm-charts" > /dev/null 2>&1  #fluentd
     su - $k8s_user -c "helm repo add elastic https://helm.elastic.co" > /dev/null 2>&1
@@ -293,6 +316,7 @@ function add_helm_repos {
     su - $k8s_user -c "helm repo add mojaloop http://mojaloop.io/helm/repo/" > /dev/null 2>&1
     su - $k8s_user -c "helm repo add cowboysysop https://cowboysysop.github.io/charts/" > /dev/null 2>&1  # mongo-express
     su - $k8s_user -c "helm repo add redpanda-data https://charts.redpanda.com/ " > /dev/null 2>&1   # kafka console
+    su - $k8s_user -c "helm repo add paymenthub https://fynarfin.io/images/ph-ee-engine-0.0.0-SNAPSHOT" > /dev/null 2>&1   # paymenthub
 
     su - $k8s_user -c "helm repo update" > /dev/null 2>&1
 }

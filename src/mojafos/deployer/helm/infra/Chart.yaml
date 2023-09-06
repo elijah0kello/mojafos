@@ -19,7 +19,6 @@ dependencies:
   tags:
   - mojafos
   - dependency
-  - vNext
   - kafka
   version: 19.0.2
 ## redpanda kafka console 
@@ -30,7 +29,6 @@ dependencies:
   tags:
   - mojafos
   - dependency
-  - vNext
   - kafka
   - redpanda
   version: 0.6.6
@@ -42,7 +40,6 @@ dependencies:
   tags:
   - mojafos
   - dependency
-  - vNext
   - mongodb
   version: 13.3.1
 ## Mongo-express
@@ -53,7 +50,6 @@ dependencies:
   tags:
   - mojafos
   - dependency
-  - vNext
   - mongodb
   version: 3.1.1
 ## redis 
@@ -64,7 +60,6 @@ dependencies:
   tags:
   - mojafos
   - dependency
-  - vNext
   - mongodb
   version: 17.11.6
 ## Elastic Search Kibana 
@@ -75,7 +70,6 @@ dependencies:
   tags:
   - mojafos
   - dependency
-  - vNext
   - elasticsearch
   version: 19.9.2
 ## MySQL
@@ -86,6 +80,5 @@ dependencies:
   tags:
   - mojafos
   - dependency
-  - vNext
   - mysql
   version: 9.4.5
