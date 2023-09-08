@@ -103,6 +103,20 @@ function install_prerequisites {
       else
           echo "Docker is already installed."
       fi
+      # Check if 'yq' is installed using Snap
+      if ! snap list | grep -q 'yq'; then
+          echo "'yq' is not installed. Installing..."
+          export PATH=$PATH:/snap/bin/
+          sudo snap install yq
+          if [ $? -eq 0 ]; then
+              echo "'yq' is now installed."
+          else
+              echo "Error: Failed to install 'yq'."
+              exit 1
+          fi
+      else
+          echo "'yq' is already installed."
+      fi
     fi
 }
 

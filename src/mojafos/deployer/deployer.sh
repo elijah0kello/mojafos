@@ -158,6 +158,7 @@ function deployMojaloop() {
   echo "Deploying Mojaloop vNext application manifests"
   createNamespace "$MOJALOOP_NAMESPACE"
   cloneRepo "$MOJALOOPBRANCH" "$MOJALOOP_REPO_LINK" "$APPS_DIR" "$MOJALOOPREPO_DIR"
+  renameOffToYaml "${MOJALOOP_LAYER_DIRS[2]}"
   configureMojaloop
 
   for index in "${!MOJALOOP_LAYER_DIRS[@]}"; do
