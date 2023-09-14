@@ -26,28 +26,34 @@ function deployHelmChartFromDir() {
 
   # Run helm dependency update to fetch dependencies
   echo "Updating Helm chart dependencies..."
-  helm dependency update
+  helm dependency update >> /dev/null 2>&1
+  echo -e "${GREEN}Helm chart updated ${RESET}"
 
   # Run helm dependency build
   echo "Building Helm chart dependencies..."
-  helm dependency build .
+  helm dependency build . >> /dev/null 2>&1
+  echo -e "${GREEN}Helm chart dependencies built ${RESET}"
 
   # Determine whether to install or upgrade the chart also check whether to apply a values file
   if [ -n "$values_file" ]; then
     if helm list -n "$namespace" | grep -q "$release_name"; then
       echo "Upgrading Helm chart..."
       helm upgrade --install "$release_name" . -n "$namespace" -f "$values_file"
+      echo -e "${GREEN}Helm chart upgraded ${RESET}"
     else
       echo "Installing Helm chart..."
       helm install "$release_name" . -n "$namespace" -f "$values_file"
+      echo -e "${GREEN}Helm chart installed ${RESET}"
     fi
   else
     if helm list -n "$namespace" | grep -q "$release_name"; then
       echo "Upgrading Helm chart..."
       helm upgrade --install "$release_name" . -n "$namespace"
+      echo -e "${GREEN}Helm chart upgraded ${RESET}"
     else
       echo "Installing Helm chart..."
       helm install "$release_name" . -n "$namespace"
+      echo -e "${GREEN}Helm chart installed ${RESET}"
     fi
   fi
 
@@ -154,17 +160,76 @@ function applyKubeManifests() {
     fi
 }
 
+# Function to perform port forwarding
+function performPortForward() {
+    kubectl -n "$INFRA_NAMESPACE" port-forward service/"$MYSQL_SERVICE_NAME" "$LOCAL_PORT":"$MYSQL_SERVICE_PORT" &
+    PORT_FORWARD_PID=$!
+    trap portForwardCleanup EXIT
+    sleep 3
+}
+
+# Function to clean up the port forward
+function portForwardCleanup() {
+    kill $PORT_FORWARD_PID
+    wait $PORT_FORWARD_PID 2>/dev/null
+    echo "Port forwarding terminated."
+}
+
+# Function to execute SQL statements
+function executeSqlStatementsFromFile() {
+    mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" -h "$MYSQL_HOST" -P "$LOCAL_PORT" < "$SQL_FILE"
+    if [ $? -eq 0 ]; then
+        echo "SQL statements executed successfully from '$SQL_FILE'."
+    else
+        echo "Error executing SQL statements from '$SQL_FILE'."
+    fi
+}
+
+# Function to restart a deployment in a specific namespace
+function restartDeployment() {
+    local deployment_name="$1"
+    local namespace="$2"
+
+    if [ -z "$deployment_name" ] || [ -z "$namespace" ]; then
+        echo "Usage: restart_deployment <deployment_name> <namespace>"
+        return 1
+    fi
+
+    # Check if the deployment exists in the given namespace
+    if ! kubectl get deployment "$deployment_name" -n "$namespace" &>/dev/null; then
+        echo "Deployment '$deployment_name' not found in namespace '$namespace'."
+        return 1
+    fi
+
+    # Use 'kubectl rollout restart' to restart the deployment
+    kubectl rollout restart deployment "$deployment_name" -n "$namespace"
+
+    echo "Restarting deployment '$deployment_name' in namespace '$namespace'."
+}
+
+function postPaymenthubDeploymentScript(){
+   echo "Fixing MySQL Race Condition"
+   performPortForward
+   executeSqlStatementsFromFile
+   restartDeployment "ph-ee-operations-app" "$PH_NAMESPACE"
+}
+
 function deployMojaloop() {
   echo "Deploying Mojaloop vNext application manifests"
   createNamespace "$MOJALOOP_NAMESPACE"
   cloneRepo "$MOJALOOPBRANCH" "$MOJALOOP_REPO_LINK" "$APPS_DIR" "$MOJALOOPREPO_DIR"
-  renameOffToYaml "${MOJALOOP_LAYER_DIRS[2]}"
+  renameOffToYaml "${MOJALOOP_LAYER_DIRS[0]}"
   configureMojaloop
 
   for index in "${!MOJALOOP_LAYER_DIRS[@]}"; do
     folder="${MOJALOOP_LAYER_DIRS[index]}"
     echo "Deploying files in $folder"
     applyKubeManifests "$folder" "$MOJALOOP_NAMESPACE"
+    if [ "$index" -eq 0 ]; then
+      echo -e "${BLUE}Waiting for Mojaloop cross cutting concerns to come up${RESET}"
+      sleep 10
+      echo -e "Proceeding ..."
+    fi
   done
 }
 
@@ -175,9 +240,14 @@ function deployPaymentHubEE() {
   configurePH "$APPS_DIR$PHREPO_DIR/helm"
   deployHelmChartFromDir "$APPS_DIR$PHREPO_DIR/helm/g2p-sandbox-fynarfin-SIT" "$PH_NAMESPACE" "$PH_RELEASE_NAME" "$PH_VALUES_FILE"
 
-  if [ $? -eq 1 ];then
+
+  # Use kubectl to get the resource count in the specified namespace
+  resource_count=$(kubectl get all -n "$PH_NAMESPACE" --ignore-not-found=true 2>/dev/null | grep -v "No resources found" | wc -l)
+
+  if [ "$resource_count" -gt 0 ];then
     deployHelmChartFromDir "$APPS_DIR$PHREPO_DIR/helm/g2p-sandbox-fynarfin-SIT" "$PH_NAMESPACE" "$PH_RELEASE_NAME" "$PH_VALUES_FILE"
   fi
+  postPaymenthubDeploymentScript
 }
 
 function deployFineract() {
@@ -191,6 +261,6 @@ function deployFineract() {
 function deployApps(){
   echo -e "${BLUE}Deploying Apps ...${RESET}"
   deployMojaloop
-#  deployPaymentHubEE
-#  deployFineract
+  deployPaymentHubEE
+  deployFineract
 }

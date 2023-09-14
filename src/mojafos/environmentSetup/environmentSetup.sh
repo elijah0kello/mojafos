@@ -70,9 +70,7 @@ function install_prerequisites {
     if [[ $LINUX_OS == "Ubuntu" ]]; then
         printf "    apt update \n"
         apt update > /dev/null 2>&1
-        printf "    python and python libs ...\n"
-        apt install python3-pip -y > /dev/null 2>&1
-        pip3 install ruamel.yaml > /dev/null
+
         if [[ $k8s_distro == "microk8s" ]]; then
             printf "   install snapd\n"
             apt install snapd -y > /dev/null 2>&1
@@ -103,19 +101,14 @@ function install_prerequisites {
       else
           echo "Docker is already installed."
       fi
-      # Check if 'yq' is installed using Snap
-      if ! snap list | grep -q 'yq'; then
-          echo "'yq' is not installed. Installing..."
-          export PATH=$PATH:/snap/bin/
-          sudo snap install yq
-          if [ $? -eq 0 ]; then
-              echo "'yq' is now installed."
-          else
-              echo "Error: Failed to install 'yq'."
-              exit 1
-          fi
+
+      # Check if mysql-client is already installed
+      if ! command -v mysql &>/dev/null; then
+          echo "mysql-client is not installed. Installing..."
+          sudo apt-get update
+          sudo apt-get install mysql-client -y
       else
-          echo "'yq' is already installed."
+          echo "mysql-client is already installed."
       fi
     fi
 }

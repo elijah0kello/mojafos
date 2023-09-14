@@ -115,6 +115,21 @@
     "new_value": "value: kafka.infra.svc.cluster.local:9092"
   },
   {
+    "file_name": "src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/apps/settlements-event-handler-svc-deployment.yaml",
+    "old_value": "value: kafka:9092",
+    "new_value": "value: kafka.infra.svc.cluster.local:9092"
+  },
+  {
+    "file_name": "src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/apps/participants-svc-deployment.yaml",
+    "old_value": "value: kafka:9092",
+    "new_value": "value: kafka.infra.svc.cluster.local:9092"
+  },
+  {
+    "file_name": "src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/apps/participants-svc-deployment.yaml",
+    "old_value": "value: mongodb:\\/\\/root:mongoDbPas42@mongodb:27017\\/",
+    "new_value": "value: mongodb:\\/\\/root:mongoDbPas42@mongodb.infra.svc.cluster.local:27017\\/"
+  },
+  {
     "file_name": "src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/apps/accounts-and-balances-builtin-ledger-grpc-svc-deployment.yaml",
     "old_value": "value: mongodb:\\/\\/root:mongoDbPas42@mongodb:27017\\/",
     "new_value": "value: mongodb:\\/\\/root:mongoDbPas42@mongodb.infra.svc.cluster.local:27017\\/"
@@ -127,7 +142,7 @@
   {
     "file_name": "src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/crosscut/auditing-svc-deployment.yaml",
     "old_value": "value: http:\\/\\/infra-elasticsearch:9200",
-    "new_value": "value: http:\\/\\/infra-elasticsearch.infra.svc.cluster.local:9200"
+    "new_value": "value: http:\\/\\/mojafos-infra-elasticsearch.infra.svc.cluster.local:9200"
   },
   {
     "file_name": "src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/crosscut/auditing-svc-deployment.yaml",
@@ -137,7 +152,7 @@
   {
     "file_name": "src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/crosscut/logging-svc-deployment.yaml",
     "old_value": "value: http:\\/\\/infra-elasticsearch:9200",
-    "new_value": "value: http:\\/\\/infra-elasticsearch.infra.svc.cluster.local:9200"
+    "new_value": "value: http:\\/\\/mojafos-infra-elasticsearch.infra.svc.cluster.local:9200"
   },
   {
     "file_name": "src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/crosscut/logging-svc-deployment.yaml",

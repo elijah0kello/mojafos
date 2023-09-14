@@ -8,11 +8,11 @@ APPS_DIR="$BASE_DIR/src/mojafos/deployer/apps/"
 INFRA_NAMESPACE="infra"
 INFRA_RELEASE_NAME="mojafos-infra"
 #mojaloop
-MOJALOOPBRANCH="main"
+MOJALOOPBRANCH="alpha-1.1"
 MOJALOOPREPO_DIR="mojaloop"
 MOJALOOP_NAMESPACE="mojaloop"
 MOJALOOP_REPO_LINK="https://github.com/mojaloop/platform-shared-tools.git"
-MOJALOOP_LAYER_DIRS=("$BASE_DIR/src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/apps" "$BASE_DIR/src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/ttk" "$BASE_DIR/src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/crosscut" )
+MOJALOOP_LAYER_DIRS=("$BASE_DIR/src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/crosscut" "$BASE_DIR/src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/apps" "$BASE_DIR/src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/ttk" )
 MOJALOOP_VALUES_FILE="$BASE_DIR/src/mojafos/configurationManager/mojaloop_values.json"
 #paymenthubee
 PHBRANCH="master"
@@ -21,6 +21,15 @@ PH_NAMESPACE="paymenthub"
 PH_RELEASE_NAME="moja-ph"
 PH_VALUES_FILE="$BASE_DIR/src/mojafos/deployer/ph_values.yaml"
 PH_REPO_LINK="https://github.com/openMF/ph-ee-env-labs.git"
+# Define Kubernetes service and MySQL connection details
+MYSQL_SERVICE_NAME="mysql"  # Replace with your MySQL service name
+MYSQL_SERVICE_PORT="3306"           # Replace with the MySQL service port
+LOCAL_PORT="3307"                   # Local port to forward to
+# MySQL Connection Details
+MYSQL_USER="root"
+MYSQL_PASSWORD="ethieTieCh8ahv"
+MYSQL_HOST="127.0.0.1"  # This is the localhost because we are port forwarding
+SQL_FILE="$BASE_DIR/src/mojafos/deployer/setup.sql"
 
 #fineract
 FIN_NAMESPACE="fineract"
@@ -31,11 +40,12 @@ FIN_NAMESPACE="fineract"
 FIN_RELEASE_NAME="fineract"
 FIN_VALUES_FILE="$BASE_DIR/src/mojafos/deployer/fin_values.yaml"
 
+
 ########################################################################
 # FUNCTIONS FOR CONFIGURATION MANAGEMENT
 ########################################################################
-function replaceValuesInYaml() {
-  local yaml_file="$1"
+function replaceValuesInFile() {
+  local file="$1"
   local old_value="$2"
   local new_value="$3"
 
@@ -46,12 +56,12 @@ function replaceValuesInYaml() {
   fi
 
   # Print debugging information
-  echo "Updating YAML file: $yaml_file"
+  echo "Updating file: $file"
   echo "Old value: $old_value"
   echo "New value: $new_value"
 
   # Use sed to update the YAML file with the new value
-  if sed -i "s/$old_value/$new_value/" "$yaml_file"; then
+  if sed -i "s/$old_value/$new_value/" "$file"; then
       echo "Value updated successfully."
       return 0
   else
@@ -116,7 +126,7 @@ function configureMojaloop() {
       new_value=$(echo "$json_object" | jq -r ".new_value")
 
       # Call the  function with the extracted attributes
-      replaceValuesInYaml "$(pwd)/$file_name" "$old_value" "$new_value"
+      replaceValuesInFile "$(pwd)/$file_name" "$old_value" "$new_value"
   done
 
   if [ $? -eq 0 ]; then
@@ -126,8 +136,21 @@ function configureMojaloop() {
   fi
 }
 
+function createSecret(){
+  local namespace="$1"
+  echo -e "Creating secrets in the $namespace namespace"
+  if make secrets -e NAMESPACE="$namespace" >> /dev/null 2>&1 ; then
+    echo -e "${GREEN}Created secrets in the $namespace namespace${RESET}"
+    return 0
+  else
+    echo -e "${RED}Creating secrets in the $namespace namespace${RESET} failed"
+    exit 1
+  fi
+}
+
 function configurePH() {
   local ph_chart_dir=$1
+  local previous_dir="$PWD"  # Save the current working directory
   echo -e "${BLUE} Configuring Payment Hub ${RESET}"
 
   cd $ph_chart_dir || exit 1
@@ -141,12 +164,15 @@ function configurePH() {
   else
       echo "make is installed. Proceeding to configure"
   fi
-  # create secrets for paymenthub
+  # create secrets for paymenthub namespace and infra namespace
   cd es-secret || exit 1
-  make secrets
+  createSecret "$PH_NAMESPACE"
+  createSecret "$INFRA_NAMESPACE"
   cd ..
   cd kibana-secret || exit 1
-  make secrets
+  createSecret "$PH_NAMESPACE"
+  createSecret "$INFRA_NAMESPACE"
+  cd ..
 
   # check if the configuration was successful
   if [ $? -eq 0 ]; then
@@ -155,6 +181,9 @@ function configurePH() {
     echo -e "${RED}Configuration of Paymenthub Failed${RESET}"
     exit 1
   fi
+
+  # Return to the previous working directory
+  cd "$previous_dir" || return 1
 }
 
 function configureFineract(){

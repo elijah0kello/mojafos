@@ -11,10 +11,10 @@ fineract:
             env:
               FINERACT_DEFAULT_TENANTDB_IDENTIFIER: "default"
               FINERACT_DEFAULT_TENANTDB_NAME: "fineract_default"
-              FINERACT_DEFAULT_TENANTDB_HOSTNAME: "fineract-mysql"
+              FINERACT_DEFAULT_TENANTDB_HOSTNAME: "mysql.infra.svc.cluster.local"
               FINERACT_DEFAULT_TENANTDB_PORT: "3306"
               FINERACT_HIKARI_DRIVER_CLASS_NAME: org.mariadb.jdbc.Driver
-              FINERACT_HIKARI_JDBC_URL: jdbc:mariadb://fineract-mysql:3306/fineract_tenants
+              FINERACT_HIKARI_JDBC_URL: jdbc:mariadb://mysql.infra.svc.cluster.local:3306/fineract_tenants
               FINERACT_SERVER_PORT: 8443
   preStopScript: 'echo -e "******Fineract is stopping********";'
   ingress:
@@ -30,8 +30,8 @@ fineract:
       cpu: "1000m"
       memory: "2Gi"
     requests:
-      cpu: "200m"
-      memory: "0.5Gi"
+      cpu: "1m"
+      memory: "0.1Gi"
 
 communityapp:
   enabled: true
