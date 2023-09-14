@@ -235,6 +235,12 @@ ph-ee-g2psandbox:
           cpu: "1m"
       redis:
         host: "redis-master.infra.svc.cluster.local"
+        port: 6379
+        password: ""
+        idempotency:
+          enabled: true
+          keyFormat: "clientCorrelationId_tenant_api"
+          apiList: "/channel/transfer,/channel/collection,/channel/gsma/transaction,/channel/transactionRequest"
       operations:
         url: "http://ops-bk.sandbox.mifos.io/api/v1"
         authEnabled: false
