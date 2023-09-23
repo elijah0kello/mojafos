@@ -4,15 +4,14 @@
 
 The deployable package is intended to simplify and automate the deployment process of three software applications, namely Mojaloop, PaymentHub, and Fineract, onto a Kubernetes cluster. This package aims to streamline the deployment process, reduce manual errors, and enable someone to demo how these softwares can work together. 
 
-## Getting Started
-How to use Mojafos
-For more info about  ,  and , please click on the respective links 
 
 ## Pre-requisites
 Make sure you have the following before you go through this guide.
 - You should be running Ubuntu 22.04 LTS on the machine where you are running this script
 - 32GB of RAM
 - 30GB+ free space in your home directory
+
+# Quick Start
 
 ## Clone the repository
 To use Mojafos, you need to clone the repository to be able to run the software scripts.
