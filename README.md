@@ -10,9 +10,9 @@ For more info about  ,  and , please click on the respective links
 
 ## Pre-requisites
 Make sure you have the following before you go through this guide.
-You should be running Ubuntu 22.04 LTS on the machine where you are running this script
-32GB of RAM
-30GB+ free space in your home directory
+- You should be running Ubuntu 22.04 LTS on the machine where you are running this script
+- 32GB of RAM
+- 30GB+ free space in your home directory
 
 ## Clone the repository
 To use Mojafos, you need to clone the repository to be able to run the software scripts.
