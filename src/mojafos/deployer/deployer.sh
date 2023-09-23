@@ -165,7 +165,18 @@ function performPortForward() {
     kubectl -n "$INFRA_NAMESPACE" port-forward service/"$MYSQL_SERVICE_NAME" "$LOCAL_PORT":"$MYSQL_SERVICE_PORT" &
     PORT_FORWARD_PID=$!
     trap portForwardCleanup EXIT
-    sleep 3
+
+    # Wait for the port to become accessible
+    local wait_seconds=0
+    until [ $wait_seconds -ge "$MAX_WAIT_SECONDS" ] || nc -z -v -w1 127.0.0.1 "$LOCAL_PORT"; do
+        sleep 2
+        wait_seconds=$((wait_seconds + 2))
+    done
+
+    if [ $wait_seconds -ge "$MAX_WAIT_SECONDS" ]; then
+        echo "Port forwarding did not become accessible within the specified time."
+        exit 1
+    fi
 }
 
 # Function to clean up the port forward

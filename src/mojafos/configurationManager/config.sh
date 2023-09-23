@@ -25,6 +25,7 @@ PH_REPO_LINK="https://github.com/openMF/ph-ee-env-labs.git"
 MYSQL_SERVICE_NAME="mysql"  # Replace with your MySQL service name
 MYSQL_SERVICE_PORT="3306"           # Replace with the MySQL service port
 LOCAL_PORT="3307"                   # Local port to forward to
+MAX_WAIT_SECONDS=60
 # MySQL Connection Details
 MYSQL_USER="root"
 MYSQL_PASSWORD="ethieTieCh8ahv"
@@ -173,6 +174,7 @@ function configurePH() {
   createSecret "$PH_NAMESPACE"
   createSecret "$INFRA_NAMESPACE"
   cd ..
+   kubectl create secret generic moja-ph-redis --from-literal=redis-password=""
 
   # check if the configuration was successful
   if [ $? -eq 0 ]; then

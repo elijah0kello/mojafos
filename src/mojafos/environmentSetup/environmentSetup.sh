@@ -110,6 +110,19 @@ function install_prerequisites {
       else
           echo "mysql-client is already installed."
       fi
+
+      # Check if nc (netcat) is installed
+      if ! command -v nc &> /dev/null; then
+          echo "nc (netcat) is not installed. Installing..."
+
+          # Update package manager repositories and install nc
+          sudo apt-get update
+          sudo apt-get install -y netcat
+
+          echo "nc (netcat) has been installed."
+      else
+          echo "nc (netcat) is already installed."
+      fi
     fi
 }
 

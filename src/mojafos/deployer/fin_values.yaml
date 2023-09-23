@@ -53,7 +53,8 @@ communityapp:
       memory: "0.5Gi"
 
 webapp:
-  image: "419830066942.dkr.ecr.ap-south-1.amazonaws.com/fineract/phee-ns/web-app:latest"
+  enabled: true
+  image: "fintecheando/web-app:latest"
   ingress:
     enabled: false
     hostname: ""

@@ -4,38 +4,48 @@
 
 The deployable package is intended to simplify and automate the deployment process of three software applications, namely Mojaloop, PaymentHub, and Fineract, onto a Kubernetes cluster. This package aims to streamline the deployment process, reduce manual errors, and enable someone to demo how these softwares can work together. 
 
-## Purpose
+## Getting Started
+How to use Mojafos
+For more info about  ,  and , please click on the respective links 
 
-The purpose of this document is to provide a comprehensive overview of the deployable package, detailing its functionalities, architecture, and usage.
+## Pre-requisites
+Make sure you have the following before you go through this guide.
+You should be running Ubuntu 22.04 LTS on the machine where you are running this script
+32GB of RAM
+30GB+ free space in your home directory
 
-## Scope
+## Clone the repository
+To use Mojafos, you need to clone the repository to be able to run the software scripts.
+Clone the repository into a directory of your choice.
+After cloning the repository,  you need to change the directory into the cloned repository.
+``` 
+git clone https://github.com/elijah0kello/mojafos.git
+```
 
-The Deployable Package will perform the following tasks:
+Inside the directory run the following command to execute the script.
 
-- Accept user input to specify the Kubernetes cluster's configuration or create a new kubernetes cluster. 
-- Retrieve the necessary deployment helm charts for the software applications.
-- Edit each software application helm chart in order for the software to function correctly in the kubernetes cluster.
-- Create Kubernetes resources for each software application in their respective namespace.
-- Configure environment variables and secrets as needed for the software applications.
-- Provide status updates on the deployment process.
-- Deploy infrastructure in a single namespace
-- Check the health of each deployed application to see if it is ready to serve requests.
+```
+sudo ./run.sh -m deploy
+```
 
-## Usage 
+After running this command, it will run a few checks and then it will ask you whether you want to setup a kubernetes cluster locally or you want to connect to a remote one that is already configured using kubectl
+```
+Would you like to use a remote Kubernetes cluster or a local one? (remote/local): 
+```
+Choose your preferred option depending on where you want to run the kubernetes cluster to run the applications.
+Enter remote to use a remote cluster and enter local to let the tool create a local cluster using k3s.
+>Currently the tool is only tested on local kubernetes deployments but work is being done to test it on remote kubernetes clusters
 
-`deploy` : Set up the kubernetes environment, deploy infrastructure and deploy the applications (mojaloop, paymenthub, and fineract).
+After entering in your preferred option allow the script to run and deploy the softwares. After  the script has successfully executed it will print the following output
+NAME: fineract
+LAST DEPLOYED: Sat Sep 23 13:34:37 2023
+NAMESPACE: fineract
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+Helm chart installed 
+Helm chart deployed successfully.
+/home/azureuser/elijah/mojafos2
+Port forwarding terminated.
 
-`health-check-interval <seconds>` : Set the interval between health checks during deployment.
-
-`check-infra` : Check the health status of the deployed infrastructure components.
-
-`check-apps` : Check the health status of the deployed applications (mojaloop, paymenthub, fineract).
-
-Options:
-`--<app-name>` : Provide the name of the application to check. e.g paymenthub, fineract or mojaloop
-
-`cleanup` : Remove all deployed resources and clean up the environment.
-
-`show-config`: Display the current configuration settings of the tool.
-
-`help` or `-h`: Display the help message with information about available commands and options.
+>The script may throw warnings but just ignore them. 

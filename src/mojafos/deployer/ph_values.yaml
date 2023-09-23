@@ -150,6 +150,14 @@ ph-ee-g2psandbox:
           GRANT ALL ON *.* TO 'root'@'%';
           GRANT ALL PRIVILEGES ON messagegateway.* TO 'mifos';
 
+    vouchers:
+      enabled: true
+      spring:
+        datasource:
+          url: "jdbc:mariadb://mysql.infra.svc.cluster.local:3306/voucher_management"
+          username: "mifos"
+          password: "password"
+
     ph_ee_connector_ams_mifos:
       enabled: true
       image: "docker.io/openmf/ph-ee-connector-ams-mifos:latest"
@@ -254,8 +262,8 @@ ph-ee-g2psandbox:
         tenant: "gorilla"
       server:
         ssl:
-          keyPassword: "<replace-with-password>"
-          keyStorePassword: "<replace-with-password>"
+          keyPassword: "password"
+          keyStorePassword: "password"
       ingress:
         enabled: false
         annotations:
@@ -302,6 +310,12 @@ ph-ee-g2psandbox:
           host: "mysql.infra.svc.cluster.local"
           port: 3306
           schema: "tenants"
+      datasource:
+        username: "mifos"
+        password: "password"
+        host: "mysql.infra.svc.cluster.local"
+        port: 3306
+        schema: "tenants"
       ingress:
         enabled: false
         annotations:
@@ -379,6 +393,9 @@ ph-ee-g2psandbox:
       LOGGING_LEVEL_ROOT: "INFO"
       MESSAGEGATEWAYCONFIG_HOST: "message-gateway"
       NOTIFICATION_LOCAL_HOST: "ph-ee-connector-notifications"
+      limits:
+        cpu: "1000m"
+        memory: "2G"
       NOTIFICATION_SUCCESS_ENABLED: "false"
       NOTIFICATION_FAILURE_ENABLED: "true"
       hostname: "notifications.sandbox.mifos.io"
@@ -409,7 +426,7 @@ ph-ee-g2psandbox:
       tenant: "rhino,gorilla"
       hostname: bulk-connector.sandbox.mifos.io
       aws:
-        region: "<region>"
+        region: "ap-south-1"
         access_key: "<access_key>"
         secret_key: "<secret_key>"
       operations_app:
