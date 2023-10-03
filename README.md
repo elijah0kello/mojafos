@@ -4,15 +4,14 @@
 
 The deployable package is intended to simplify and automate the deployment process of three software applications, namely Mojaloop, PaymentHub, and Fineract, onto a Kubernetes cluster. This package aims to streamline the deployment process, reduce manual errors, and enable someone to demo how these softwares can work together. 
 
-## Getting Started
-How to use Mojafos
-For more info about  ,  and , please click on the respective links 
 
 ## Pre-requisites
 Make sure you have the following before you go through this guide.
-You should be running Ubuntu 22.04 LTS on the machine where you are running this script
-32GB of RAM
-30GB+ free space in your home directory
+- You should be running Ubuntu 22.04 LTS on the machine where you are running this script
+- 32GB of RAM
+- 30GB+ free space in your home directory
+
+# Quick Start
 
 ## Clone the repository
 To use Mojafos, you need to clone the repository to be able to run the software scripts.
@@ -37,6 +36,8 @@ Enter remote to use a remote cluster and enter local to let the tool create a lo
 >Currently the tool is only tested on local kubernetes deployments but work is being done to test it on remote kubernetes clusters
 
 After entering in your preferred option allow the script to run and deploy the softwares. After  the script has successfully executed it will print the following output
+
+```
 NAME: fineract
 LAST DEPLOYED: Sat Sep 23 13:34:37 2023
 NAMESPACE: fineract
@@ -47,5 +48,6 @@ Helm chart installed
 Helm chart deployed successfully.
 /home/azureuser/elijah/mojafos2
 Port forwarding terminated.
+```
 
 >The script may throw warnings but just ignore them. 
