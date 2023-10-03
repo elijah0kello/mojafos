@@ -548,7 +548,6 @@ function envSetupMain {
         set_k8s_distro
         set_k8s_version
         k8s_already_installed
-        check_pi  # note microk8s on my pi still has some issues around cgroups
         check_os_ok # todo add check to this once tested across other OS's more fully
         install_prerequisites
         add_hosts

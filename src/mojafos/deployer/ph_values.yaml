@@ -154,7 +154,7 @@ ph-ee-g2psandbox:
       enabled: true
       spring:
         datasource:
-          url: "jdbc:mariadb://mysql.infra.svc.cluster.local:3306/voucher_management"
+          url: "jdbc:mysql://mysql.infra.svc.cluster.local:3306/voucher_management"
           username: "mifos"
           password: "password"
 
@@ -451,6 +451,9 @@ ph-ee-g2psandbox:
       deployment:
         annotations:
           deployTime: "{{ .Values.deployTime }}"
+        extraEnvs:
+          - name: kafka_bootstrapAddress
+            value: "kafka.infra.svc.cluster.local:9092"
 
     zeebe_ops:
       enabled: true
@@ -511,6 +514,9 @@ ph-ee-g2psandbox:
       deployment:
         annotations:
           deployTime: "{{ .Values.deployTime }}"
+        extraEnvs:
+          - name: ZEEBE_BROKER_CONTACTPOINT
+            value: moja-ph-zeebe-gateway:26500
 
     importer_es:
       enabled: true
@@ -532,6 +538,10 @@ ph-ee-g2psandbox:
         host: "mysql.infra.svc.cluster.local"
         port: 3306
         schema: "tenants"
+      deployment:
+        extraEnvs:
+          - name: kafka_brokers
+            value: "kafka.infra.svc.cluster.local:9092"
 
     keycloak:
       enabled: true

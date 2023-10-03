@@ -174,7 +174,7 @@ function configurePH() {
   createSecret "$PH_NAMESPACE"
   createSecret "$INFRA_NAMESPACE"
   cd ..
-   kubectl create secret generic moja-ph-redis --from-literal=redis-password=""
+  kubectl create secret generic moja-ph-redis --from-literal=redis-password=""
 
   # check if the configuration was successful
   if [ $? -eq 0 ]; then
