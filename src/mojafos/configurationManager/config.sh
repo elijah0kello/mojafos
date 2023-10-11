@@ -152,7 +152,7 @@ function createSecret(){
 function configurePH() {
   local ph_chart_dir=$1
   local previous_dir="$PWD"  # Save the current working directory
-  echo -e "${BLUE} Configuring Payment Hub ${RESET}"
+  echo -e "${BLUE}Configuring Payment Hub ${RESET}"
 
   cd $ph_chart_dir || exit 1
 

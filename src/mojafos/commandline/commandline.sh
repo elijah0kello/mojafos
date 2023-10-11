@@ -21,24 +21,30 @@ function welcome {
   echo -e "                                                              ${RESET}"
 }
 
+function showUsage {
+  echo -e "Show usage for Mojafos"
+}
+
 function getoptions {
   local mode_opt
 
-  while getopts "m:" opt; do
-    case $opt in
-      m)
-        mode_opt="$OPTARG"
-        ;;
-      \?)
-        echo "Usage: $0 -m <mode>"
-        exit 1
-        ;;
-      :)
-        echo "Option -$OPTARG requires an argument."
-        exit 1
-        ;;
-    esac
-  done
+  while getopts "m:n:hH" OPTION ; do
+    case "${OPTION}" in
+            m)	    mode_opt="${OPTARG}"
+            ;;
+            k)      k8s_distro="${OPTARG}"
+            ;;
+            v)	    k8s_user_version="${OPTARG}"
+            ;;
+            h|H)	showUsage
+                    exit 0
+            ;;
+            *)	echo  "unknown option"
+                    showUsage
+                    exit 1
+            ;;
+        esac
+    done
 
   if [ -z "$mode_opt" ]; then
     echo "Error: Mode argument is required."
@@ -54,13 +60,14 @@ function getoptions {
 function main {
   welcome 
   getoptions "$@"
-  echo "Setting up kubernetes and other deployment utilities for Mojaloop, PaymentHub EE and Apache Fineract"
   if [ $mode == "deploy" ]; then
-    envSetupMain -m install -k k3s -v 1.26
+    echo -e "${BLUE}Setting up kubernetes and other deployment utilities for Mojaloop, PaymentHub EE and Apache Fineract${RESET}"
+    envSetupMain "$mode" "k3s" "1.26"
     deployInfrastructure
     deployApps
   elif [ $mode == "cleanup" ]; then
-    envSetupMain -m delete -k k3s -v 1.26
+  echo -e "${BLUE}Cleaning up all traces of Mojafos${RESET}"
+    envSetupMain "$mode" "k3s" "1.26"
   else
     showUsage
   fi

@@ -10,7 +10,7 @@ function check_resources_ok {
     # Get the total amount of installed RAM in GB
     total_ram=$(free -g | awk '/^Mem:/{print $2}')
     # Get the current free space on the root filesystem in GB
-    free_space=$(df -BG /home/"$k8s_user" | awk '{print $4}' | tail -n 1 | sed 's/G//')
+    free_space=$(df -BG ~ | awk '{print $4}' | tail -n 1 | sed 's/G//')
 
     # Check RAM
     if [[ "$total_ram" -lt "$MIN_RAM" ]]; then
@@ -28,7 +28,7 @@ function check_resources_ok {
 
 function set_user {
   # set the k8s_user
-  k8s_user=`who am i | cut -d " " -f1`
+  k8s_user=`whoami | cut -d " " -f1`
 }
 
 function k8s_already_installed {
@@ -140,7 +140,7 @@ function add_hosts {
     perl -p -i.bak -e 's/127\.0\.0\.1.*localhost.*$/$ENV{ENDPOINTS} /' /etc/hosts
     # TODO check the ping actually works > suggest cloud network rules if it doesn't
     #      also for cloud VMs might need to use something other than curl e.g. netcat ?
-    ping  -c 2 account-lookup-service-admin.local
+    # ping  -c 2 account-lookup-service-admin.local
 }
 
 function set_k8s_distro {
@@ -235,11 +235,11 @@ function do_microk8s_install {
 
 function do_k3s_install {
     printf "========================================================================================\n"
-    printf "Mojaloop k3s install : Installing Kubernetes k3s engine and tools (helm/ingress etc) \n"
+    printf "Mojafos k3s install : Installing Kubernetes k3s engine and tools (helm/ingress etc) \n"
     printf "========================================================================================\n"
     # ensure k8s_user has clean .kube/config
     rm -rf $k8s_user_home/.kube >> /dev/null 2>&1
-    printf "=> installing k3s "
+    printf "==> installing k3s "
     #echo $K8S_VERSION
     curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" \
                             INSTALL_K3S_CHANNEL="v$K8S_VERSION" \
@@ -423,10 +423,11 @@ function check_k8s_installed {
 }
 
 function print_end_message {
-    printf "\n\n*********************** << success >> *******************************************\n"
-    printf "            -- mojafos kubernetes install utility -- \n"
-    printf "  utilities for deploying kubernetes in preparation for Mojaloop deployment   \n"
-    printf "************************** << end  >> *******************************************\n\n"
+    echo -e "${GREEN}Environment setup successful${RESET}"
+}
+
+function print_end_message_tear_down {
+    echo -e "${GREEN}Environment tear down successful${RESET}"
 }
 
 ################################################################################
@@ -518,26 +519,10 @@ function envSetupMain {
         exit 1
     fi
 
-    # Process command line options as required
-    while getopts "m:k:v:u:hH" OPTION ; do
-    case "${OPTION}" in
-            m)	    mode="${OPTARG}"
-            ;;
-            k)      k8s_distro="${OPTARG}"
-            ;;
-            v)	    k8s_user_version="${OPTARG}"
-            # ;;
-            # u)      k8s_user="${OPTARG}"
-            ;;
-            h|H)	showUsage
-                    exit 0
-            ;;
-            *)	echo  "unknown option"
-                    showUsage
-                    exit 1
-            ;;
-        esac
-    done
+    # Process function arguments as required
+    mode="$1"
+    k8s_distro="$2"
+    k8s_user_version="$3"
 
     check_arch_ok
     set_user
@@ -563,7 +548,7 @@ function envSetupMain {
         print_end_message
     elif [[ "$mode" == "cleanup" ]]  ; then
         delete_k8s
-        print_end_message
+        print_end_message_tear_down
     else
         showUsage
     fi

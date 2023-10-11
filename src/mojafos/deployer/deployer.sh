@@ -255,18 +255,29 @@ function deployPaymentHubEE() {
   # Use kubectl to get the resource count in the specified namespace
   resource_count=$(kubectl get all -n "$PH_NAMESPACE" --ignore-not-found=true 2>/dev/null | grep -v "No resources found" | wc -l)
 
-  if [ "$resource_count" -gt 0 ];then
+  if [ "$resource_count" -lt 0 ];then
     deployHelmChartFromDir "$APPS_DIR$PHREPO_DIR/helm/g2p-sandbox-fynarfin-SIT" "$PH_NAMESPACE" "$PH_RELEASE_NAME" "$PH_VALUES_FILE"
   fi
-  postPaymenthubDeploymentScript
+  # postPaymenthubDeploymentScript
 }
 
 function deployFineract() {
-  echo "Deploying Fineract"
-  createNamespace "$FIN_NAMESPACE"
+  echo -e "${BLUE}Deploying Fineract${RESET}"
+
   cloneRepo "$FIN_BRANCH" "$FIN_REPO_LINK" "$APPS_DIR" "$FIN_REPO_DIR"
   configureFineract
-  deployHelmChartFromDir "$APPS_DIR$FIN_REPO_DIR/helm/fineract" "$FIN_NAMESPACE" "$FIN_RELEASE_NAME" "$FIN_VALUES_FILE"
+
+  read -p "How many instances of fineract would you like to deploy? Enter number: " num_instances
+  echo -e "Deploying $num_instances instances of fineract"
+
+  # Check if the input is a valid integer
+  for ((i=1; i<=num_instances; i++))
+  do
+    sed -i "s/hostname: \"[0-9]*-?fynams\.sandbox\.fynarfin\.io\"/hostname: \"$i-fynams.sandbox.fynarfin.io\"/" "$FIN_VALUES_FILE"
+    sed -i "s/hostname: "[0-9]*-?communityapp\.sandbox\.fynarfin\.io"/hostname: \"$i-communityapp.sandbox.fynarfin.io\"/" "$FIN_VALUES_FILE"
+    createNamespace "$FIN_NAMESPACE-$i"
+    deployHelmChartFromDir "$APPS_DIR$FIN_REPO_DIR/helm/fineract" "$FIN_NAMESPACE-$i" "$FIN_RELEASE_NAME-$i" "$FIN_VALUES_FILE"
+  done
 }
 
 function deployApps(){
