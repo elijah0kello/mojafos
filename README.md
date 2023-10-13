@@ -56,3 +56,4 @@ Port forwarding terminated.
 - Support to allow the user specify the number of fineract instances to deploy
 - Stabilise paymenthub deployment 
 - Add a note in the logs to state that this is not a production grade deployment of the softwares
+- Show usage message

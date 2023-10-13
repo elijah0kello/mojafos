@@ -273,8 +273,8 @@ function deployFineract() {
   # Check if the input is a valid integer
   for ((i=1; i<=num_instances; i++))
   do
-    sed -i "s/hostname: \"[0-9]*-?fynams\.sandbox\.fynarfin\.io\"/hostname: \"$i-fynams.sandbox.fynarfin.io\"/" "$FIN_VALUES_FILE"
-    sed -i "s/hostname: "[0-9]*-?communityapp\.sandbox\.fynarfin\.io"/hostname: \"$i-communityapp.sandbox.fynarfin.io\"/" "$FIN_VALUES_FILE"
+    sed -i "s/\([0-9]-\)\?fynams.sandbox.fynarfin.io/$i-fynams.sandbox.fynarfin.io/" "$FIN_VALUES_FILE"
+    sed -i "s/\([0-9]-\)\?communityapp.sandbox.fynarfin.io/$i-communityapp.sandbox.fynarfin.io/" "$FIN_VALUES_FILE"
     createNamespace "$FIN_NAMESPACE-$i"
     deployHelmChartFromDir "$APPS_DIR$FIN_REPO_DIR/helm/fineract" "$FIN_NAMESPACE-$i" "$FIN_RELEASE_NAME-$i" "$FIN_VALUES_FILE"
   done
