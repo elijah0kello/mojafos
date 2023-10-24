@@ -57,12 +57,15 @@ function deployHelmChartFromDir() {
     fi
   fi
 
+  # Use kubectl to get the resource count in the specified namespace
+  resource_count=$(kubectl get pods -n "$namespace" --ignore-not-found=true 2>/dev/null | grep -v "No resources found" | wc -l)
+
   # Check if the deployment was successful
-  if [ $? -eq 0 ]; then
+  if [ $resource_count -gt 0 ]; then
     echo "Helm chart deployed successfully."
   else
-    echo "Helm chart deployment failed."
-    return 1
+    echo -e "${RED}Helm chart deployment failed.${RESET}"
+    cleanUp
   fi
 
   # Exit the chart directory
@@ -160,69 +163,72 @@ function applyKubeManifests() {
     fi
 }
 
-# Function to perform port forwarding
-function performPortForward() {
-    kubectl -n "$INFRA_NAMESPACE" port-forward service/"$MYSQL_SERVICE_NAME" "$LOCAL_PORT":"$MYSQL_SERVICE_PORT" &
-    PORT_FORWARD_PID=$!
-    trap portForwardCleanup EXIT
+function runFailedSQLStatements(){
+  echo "Fxing Operations App MySQL Race condition"
+  operationsDeplName=$(kubectl get deploy --no-headers -o custom-columns=":metadata.name" -n $PH_NAMESPACE | grep operations-app)
+  kubectl exec -it mysql-0 -n infra -- mysql -h mysql -uroot -pethieTieCh8ahv < src/mojafos/deployer/setup.sql
 
-    # Wait for the port to become accessible
-    local wait_seconds=0
-    until [ $wait_seconds -ge "$MAX_WAIT_SECONDS" ] || nc -z -v -w1 127.0.0.1 "$LOCAL_PORT"; do
-        sleep 2
-        wait_seconds=$((wait_seconds + 2))
-    done
+  if [ $? -eq 0 ];then
+    echo "SQL File execution successful"
+  else 
+    echo "SQL File execution failed"
+    exit 1
+  fi
 
-    if [ $wait_seconds -ge "$MAX_WAIT_SECONDS" ]; then
-        echo "Port forwarding did not become accessible within the specified time."
-        exit 1
-    fi
+  echo "Restarting Deployment for Operations App"
+  kubectl rollout restart deploy/$operationsDeplName -n $PH_NAMESPACE
+
+  if [ $? -eq 0 ];then
+    echo "Deployment Restart successful"
+  else 
+    echo "Deployment Restart failed"
+    exit 1
+  fi
 }
 
-# Function to clean up the port forward
-function portForwardCleanup() {
-    kill $PORT_FORWARD_PID
-    wait $PORT_FORWARD_PID 2>/dev/null
-    echo "Port forwarding terminated."
-}
+#Function to run kong migrations in Kong init container 
+function runKongMigrations(){
+  echo "Fixing Kong Migrations"
+  #StoreKongPods
+  kongPods=$(kubectl get pods --no-headers -o custom-columns=":metadata.name" -n $PH_NAMESPACE | grep moja-ph-kong)
+  dBcontainerName="wait-for-db"
+  for pod in $kongPods; 
+  do 
+    podName=$(kubectl get pod $pod --no-headers -o custom-columns=":metadata.labels.app" -n $PH_NAMESPACE)
+    if [[ "$podName" == "moja-ph-kong" ]]; then 
+        initContainerStatus=$(kubectl get pod $pod  --no-headers -o custom-columns=":status.initContainerStatuses[0].ready" -n $PH_NAMESPACE)
+      while [[ "$initContainerStatus" != "true" ]]; do
+        printf "\rReady State: $initContainerStatus Waiting for status to become true ..."
+        initContainerStatus=$(kubectl get pod $pod  --no-headers -o custom-columns=":status.initContainerStatuses[0].ready" -n $PH_NAMESPACE)
+        sleep 5
+      done
+      echo "Status is now true"
+      while  kubectl get pod "$podName" -o jsonpath="{:status.initContainersStatuses[1].name}" | grep -q "$dBcontainerName" ; do
+        printf "\r Waiting for Init DB container to be created ..."
+        sleep 5
+      done
 
-# Function to execute SQL statements
-function executeSqlStatementsFromFile() {
-    mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" -h "$MYSQL_HOST" -P "$LOCAL_PORT" < "$SQL_FILE"
-    if [ $? -eq 0 ]; then
-        echo "SQL statements executed successfully from '$SQL_FILE'."
+      echo && echo $pod
+      statusCode=1
+      while [ $statusCode -eq 1 ]; do
+        printf "\rRunning Migrations ..."
+        kubectl exec $pod -c $dBcontainerName -n $PH_NAMESPACE -- kong migrations bootstrap >> /dev/null 2>&1
+        statusCode=$?
+        if [ $statusCode -eq 0 ]; then
+          echo "\nKong Migrations Successful"
+        fi
+      done
     else
-        echo "Error executing SQL statements from '$SQL_FILE'."
+      continue
     fi
-}
-
-# Function to restart a deployment in a specific namespace
-function restartDeployment() {
-    local deployment_name="$1"
-    local namespace="$2"
-
-    if [ -z "$deployment_name" ] || [ -z "$namespace" ]; then
-        echo "Usage: restart_deployment <deployment_name> <namespace>"
-        return 1
-    fi
-
-    # Check if the deployment exists in the given namespace
-    if ! kubectl get deployment "$deployment_name" -n "$namespace" &>/dev/null; then
-        echo "Deployment '$deployment_name' not found in namespace '$namespace'."
-        return 1
-    fi
-
-    # Use 'kubectl rollout restart' to restart the deployment
-    kubectl rollout restart deployment "$deployment_name" -n "$namespace"
-
-    echo "Restarting deployment '$deployment_name' in namespace '$namespace'."
+  done
 }
 
 function postPaymenthubDeploymentScript(){
-   echo "Fixing MySQL Race Condition"
-   performPortForward
-   executeSqlStatementsFromFile
-   restartDeployment "ph-ee-operations-app" "$PH_NAMESPACE"
+  #Run migrations in Kong Pod
+  runKongMigrations
+  # Run failed MySQL statements.
+  runFailedSQLStatements
 }
 
 function deployMojaloop() {
@@ -249,16 +255,12 @@ function deployPaymentHubEE() {
   createNamespace "$PH_NAMESPACE"
   cloneRepo "$PHBRANCH" "$PH_REPO_LINK" "$APPS_DIR" "$PHREPO_DIR"
   configurePH "$APPS_DIR$PHREPO_DIR/helm"
-  deployHelmChartFromDir "$APPS_DIR$PHREPO_DIR/helm/g2p-sandbox-fynarfin-SIT" "$PH_NAMESPACE" "$PH_RELEASE_NAME" "$PH_VALUES_FILE"
-
-
-  # Use kubectl to get the resource count in the specified namespace
-  resource_count=$(kubectl get all -n "$PH_NAMESPACE" --ignore-not-found=true 2>/dev/null | grep -v "No resources found" | wc -l)
-
-  if [ "$resource_count" -lt 0 ];then
+  
+  for((i=1; i<=2; i++))
+  do
     deployHelmChartFromDir "$APPS_DIR$PHREPO_DIR/helm/g2p-sandbox-fynarfin-SIT" "$PH_NAMESPACE" "$PH_RELEASE_NAME" "$PH_VALUES_FILE"
-  fi
-  # postPaymenthubDeploymentScript
+  done 
+  postPaymenthubDeploymentScript
 }
 
 function deployFineract() {
@@ -270,6 +272,10 @@ function deployFineract() {
   read -p "How many instances of fineract would you like to deploy? Enter number: " num_instances
   echo -e "Deploying $num_instances instances of fineract"
 
+  if [ $num_instances -eq 0 ];then
+    num_instances=2
+  fi
+  
   # Check if the input is a valid integer
   for ((i=1; i<=num_instances; i++))
   do
@@ -280,9 +286,19 @@ function deployFineract() {
   done
 }
 
-function deployApps(){
+function testApps {
+  echo "TODO" #TODO Write function to test apps
+}
+
+function printEndMessage {
+  echo "TODO" #TODO Write function to conclude script.
+}
+
+function deployApps {
   echo -e "${BLUE}Deploying Apps ...${RESET}"
   deployMojaloop
   deployPaymentHubEE
   deployFineract
+  testApps
+  printEndMessage
 }

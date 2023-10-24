@@ -24,7 +24,7 @@ git clone https://github.com/elijah0kello/mojafos.git
 Inside the directory run the following command to execute the script.
 
 ```
-sudo ./run.sh -m deploy
+sudo ./run.sh -u $USER -m deploy
 ```
 
 After running this command, it will run a few checks and then it will ask you whether you want to setup a kubernetes cluster locally or you want to connect to a remote one that is already configured using kubectl
@@ -35,12 +35,22 @@ Choose your preferred option depending on where you want to run the kubernetes c
 Enter remote to use a remote cluster and enter local to let the tool create a local cluster using k3s.
 >Currently the tool is only tested on local kubernetes deployments but work is being done to test it on remote kubernetes clusters
 
-After entering in your preferred option allow the script to run and deploy the softwares. After  the script has successfully executed it will print the following output
+After entering in your preferred option allow the script to run and deploy the softwares.
+
+At some point in the script's execution, it will ask you for the number of fineract instances you would like to deploy.
 
 ```
-NAME: fineract
+How many instances of fineract would you like to deploy? Enter number:
+```
+
+Enter the number of instances you would like to deploy and press enter.
+
+After  the script has successfully executed it will print the following output depending on the number of fineract instances you decided to deploy.
+
+```
+NAME: fineract-2
 LAST DEPLOYED: Sat Sep 23 13:34:37 2023
-NAMESPACE: fineract
+NAMESPACE: fineract-2
 STATUS: deployed
 REVISION: 1
 TEST SUITE: None

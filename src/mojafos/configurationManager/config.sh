@@ -127,7 +127,7 @@ function configureMojaloop() {
       new_value=$(echo "$json_object" | jq -r ".new_value")
 
       # Call the  function with the extracted attributes
-      replaceValuesInFile "$(pwd)/$file_name" "$old_value" "$new_value"
+      replaceValuesInFile "$file_name" "$old_value" "$new_value"
   done
 
   if [ $? -eq 0 ]; then
@@ -174,7 +174,7 @@ function configurePH() {
   createSecret "$PH_NAMESPACE"
   createSecret "$INFRA_NAMESPACE"
   cd ..
-  kubectl create secret generic moja-ph-redis --from-literal=redis-password=""
+  kubectl create secret generic moja-ph-redis --from-literal=redis-password="" -n "$PH_NAMESPACE"
 
   # check if the configuration was successful
   if [ $? -eq 0 ]; then

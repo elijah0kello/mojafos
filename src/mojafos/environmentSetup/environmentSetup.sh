@@ -28,7 +28,8 @@ function check_resources_ok {
 
 function set_user {
   # set the k8s_user
-  k8s_user=`whoami | cut -d " " -f1`
+#   k8s_user=`whoami | cut -d " " -f1`
+    echo "k8s user is $k8s_user"
 }
 
 function k8s_already_installed {
@@ -100,15 +101,6 @@ function install_prerequisites {
           echo "Docker has been installed."
       else
           echo "Docker is already installed."
-      fi
-
-      # Check if mysql-client is already installed
-      if ! command -v mysql &>/dev/null; then
-          echo "mysql-client is not installed. Installing..."
-          sudo apt-get update
-          sudo apt-get install mysql-client -y
-      else
-          echo "mysql-client is already installed."
       fi
 
       # Check if nc (netcat) is installed
@@ -260,6 +252,7 @@ function do_k3s_install {
     cp /etc/rancher/k3s/k3s.yaml  $k8s_user_home/k3s.yaml
     chown $k8s_user  $k8s_user_home/k3s.yaml
     chmod 600  $k8s_user_home/k3s.yaml
+    sudo chmod 600 $KUBECONFIG
 
     perl -p -i.bak -e 's/^.*KUBECONFIG.*$//g' $k8s_user_home/.bashrc
     echo "export KUBECONFIG=\$HOME/k3s.yaml" >>  $k8s_user_home/.bashrc
@@ -460,6 +453,11 @@ Options:
 function setup_k8s_cluster {
         read -p "Would you like to use a remote Kubernetes cluster or a local one? (remote/local): " cluster_type
 
+        if [ -z "$cluster_type" ]; then
+            printf "Cluster type not set. Defaulting to local \n"
+            cluster_type="local"
+        fi
+
         if [[ "$cluster_type" == "remote" ]]; then
             echo "Verifying connection to the remote Kubernetes cluster..."
             kubectl get pods >/dev/null 2>&1
@@ -477,8 +475,13 @@ function setup_k8s_cluster {
                 do_k3s_install
             fi
         else
-            echo "Invalid choice. Please choose either 'remote' or 'local'."
-            exit 1
+            echo "Invalid choice. Defaulting to local"
+            cluster_type="local"
+            if [[ "$k8s_distro" == "microk8s" ]]; then
+                do_microk8s_install
+            else
+                do_k3s_install
+            fi
         fi
 }
 
@@ -486,10 +489,6 @@ function setup_k8s_cluster {
 # MAIN
 ################################################################################
 function envSetupMain {
-
-    BASE_DIR=$( cd $(dirname "$0")/../.. ; pwd )
-    RUN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" # the directory that this script is run from
-
     DEFAULT_K8S_DISTRO="k3s"   # default to microk8s as this is what is in the mojaloop linux deploy docs.
     K8S_VERSION=""
     MINILOOP_VERSION="vNext"
@@ -529,6 +528,8 @@ function envSetupMain {
     verify_user
 
     if [[ "$mode" == "deploy" ]]  ; then
+        BASE_DIR=$( cd $(dirname "$0")/../.. ; pwd )
+        RUN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" # the directory that this script is run from
         check_resources_ok
         set_k8s_distro
         set_k8s_version

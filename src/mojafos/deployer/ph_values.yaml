@@ -218,6 +218,9 @@ ph-ee-g2psandbox:
 
     mockpayment:
       enabled: true
+      limits:
+        memory: "1000m"
+        cpu: "500m"
 
     kafka:
       enabled: false
@@ -451,9 +454,9 @@ ph-ee-g2psandbox:
       deployment:
         annotations:
           deployTime: "{{ .Values.deployTime }}"
-        extraEnvs:
-          - name: kafka_bootstrapAddress
-            value: "kafka.infra.svc.cluster.local:9092"
+        # extraEnvs:
+        #   - name: kafka_bootstrapAddress
+        #     value: "kafka.infra.svc.cluster.local:9092"
 
     zeebe_ops:
       enabled: true
@@ -514,9 +517,9 @@ ph-ee-g2psandbox:
       deployment:
         annotations:
           deployTime: "{{ .Values.deployTime }}"
-        extraEnvs:
-          - name: ZEEBE_BROKER_CONTACTPOINT
-            value: moja-ph-zeebe-gateway:26500
+        # extraEnvs:
+        #   - name: ZEEBE_BROKER_CONTACTPOINT
+        #     value: moja-ph-zeebe-gateway:26500
 
     importer_es:
       enabled: true
