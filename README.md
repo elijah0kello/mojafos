@@ -27,6 +27,8 @@ Inside the directory run the following command to execute the script.
 sudo ./run.sh -u $USER -m deploy
 ```
 
+> NOTE: The deployment made by this script is meant for demo purposes and not for production
+
 After running this command, it will run a few checks and then it will ask you whether you want to setup a kubernetes cluster locally or you want to connect to a remote one that is already configured using kubectl
 ```
 Would you like to use a remote Kubernetes cluster or a local one? (remote/local): 
@@ -45,19 +47,28 @@ How many instances of fineract would you like to deploy? Enter number:
 
 Enter the number of instances you would like to deploy and press enter.
 
-After  the script has successfully executed it will print the following output depending on the number of fineract instances you decided to deploy.
+After  the script has successfully executed it will print the following output
 
 ```
-NAME: fineract-2
-LAST DEPLOYED: Sat Sep 23 13:34:37 2023
-NAMESPACE: fineract-2
-STATUS: deployed
-REVISION: 1
-TEST SUITE: None
-Helm chart installed 
-Helm chart deployed successfully.
-/home/azureuser/elijah/mojafos2
-Port forwarding terminated.
+========================================================================
+Thank you for installing Mojaloop, Paymenthub and Fineract using Mojafos
+========================================================================
+
+
+TESTING
+sudo ./run -u $USER -m test ml #For testing mojaloop
+sudo ./run -u $USER -m test ph #For testing payment hub
+sudo ./run -u $USER -m test fin #For testing fineract
+
+
+
+CHECK DEPLOYMENTS USING kubectl
+kubectl get pods -n mojaloop #For testing mojaloop
+kubectl get pods -n paymenthub #For testing paymenthub
+kubectl get pods -n fineract-n #For testing fineract. n is a number of a fineract instance
+
+
+Copyright © 2023 The Mifos Initiative
 ```
 
 ## WHAT HAS NOT YET BEEN DONE

@@ -11,7 +11,7 @@ BLUE='\033[0;34m'
 RESET='\033[0m'
 
 function welcome {
-  echo -e "${YELLOW}"
+  echo -e "${BLUE}"
   echo -e "███    ███  ██████       ██  █████  ███████  ██████  ███████ "
   echo -e "████  ████ ██    ██      ██ ██   ██ ██      ██    ██ ██      "
   echo -e "██ ████ ██ ██    ██      ██ ███████ █████   ██    ██ ███████ "
@@ -73,7 +73,7 @@ function cleanUp ()
 
 function trapCtrlc {
   echo
-  echo -e "${RED}Ctrl-C caught...performing clean up${RESET}"
+  echo -e "${RED}Ctrl-C caught...${RESET}"
   cleanUp
 }
 
@@ -88,7 +88,11 @@ function main {
   welcome 
   getoptions "$@"
   if [ $mode == "deploy" ]; then
-    echo -e "${BLUE}Setting up kubernetes and other deployment utilities for Mojaloop, PaymentHub EE and Apache Fineract${RESET}"
+    echo -e "${YELLOW}"
+    echo -e "===================================================================================="
+    echo -e "The deployment made by this script is meant for demo purposes and not for production"
+    echo -e "===================================================================================="
+    echo -e "${RESET}"
     envSetupMain "$mode" "k3s" "1.26"
     deployInfrastructure
     deployApps

@@ -57,13 +57,13 @@ function replaceValuesInFile() {
   fi
 
   # Print debugging information
-  echo "Updating file: $file"
-  echo "Old value: $old_value"
-  echo "New value: $new_value"
+  printf "\rUpdating file: $file"
+  printf "\rOld value: $old_value"
+  printf "\rNew value: $new_value"
 
   # Use sed to update the YAML file with the new value
   if sed -i "s/$old_value/$new_value/" "$file"; then
-      echo "Value updated successfully."
+      printf "\rValue updated successfully."
       return 0
   else
       echo "Error updating the value."
@@ -131,7 +131,7 @@ function configureMojaloop() {
   done
 
   if [ $? -eq 0 ]; then
-    echo -e "${GREEN}Mojaloop Manifests edited successfully${RESET}"
+    echo -e "\n==> Mojaloop Manifests edited successfully"
   else
     echo -e "${RED}Mojaloop Manifests were not edited successfully${RESET}"
   fi

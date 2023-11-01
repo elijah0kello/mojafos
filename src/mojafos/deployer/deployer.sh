@@ -27,33 +27,33 @@ function deployHelmChartFromDir() {
   # Run helm dependency update to fetch dependencies
   echo "Updating Helm chart dependencies..."
   helm dependency update >> /dev/null 2>&1
-  echo -e "${GREEN}Helm chart updated ${RESET}"
+  echo -e "==> Helm chart updated"
 
   # Run helm dependency build
   echo "Building Helm chart dependencies..."
   helm dependency build . >> /dev/null 2>&1
-  echo -e "${GREEN}Helm chart dependencies built ${RESET}"
+  echo -e "==> Helm chart dependencies built"
 
   # Determine whether to install or upgrade the chart also check whether to apply a values file
   if [ -n "$values_file" ]; then
     if helm list -n "$namespace" | grep -q "$release_name"; then
       echo "Upgrading Helm chart..."
       helm upgrade --install "$release_name" . -n "$namespace" -f "$values_file"
-      echo -e "${GREEN}Helm chart upgraded ${RESET}"
+      echo -e "==> Helm chart upgraded"
     else
       echo "Installing Helm chart..."
       helm install "$release_name" . -n "$namespace" -f "$values_file"
-      echo -e "${GREEN}Helm chart installed ${RESET}"
+      echo -e "==> Helm chart installed"
     fi
   else
     if helm list -n "$namespace" | grep -q "$release_name"; then
       echo "Upgrading Helm chart..."
       helm upgrade --install "$release_name" . -n "$namespace"
-      echo -e "${GREEN}Helm chart upgraded ${RESET}"
+      echo -e "==> Helm chart upgraded"
     else
       echo "Installing Helm chart..."
       helm install "$release_name" . -n "$namespace"
-      echo -e "${GREEN}Helm chart installed ${RESET}"
+      echo -e "==> Helm chart installed"
     fi
   fi
 
@@ -75,9 +75,9 @@ function deployHelmChartFromDir() {
 
 function createNamespace () {
   local namespace=$1
-  printf "Creating namespace $namespace \n"
+  printf "==> Creating namespace $namespace \n"
   # Check if the namespace already exists
-  if kubectl get namespace "$namespace" > /dev/null 2>&1; then
+  if kubectl get namespace "$namespace" >> /dev/null 2>&1; then
       echo -e "${RED}Namespace $namespace already exists.${RESET}"
       exit 1
   fi
@@ -85,16 +85,19 @@ function createNamespace () {
   # Create the namespace
   kubectl create namespace "$namespace"
   if [ $? -eq 0 ]; then
-      echo -e "${GREEN}Namespace $namespace created successfully. ${RESET}"
+      echo -e "==> Namespace $namespace created successfully."
   else
       echo "Failed to create namespace $namespace."
   fi
 }
 
 function deployInfrastructure () {
-  printf "Deploying infrastructure \n"
+  printf "==> Deploying infrastructure \n"
   createNamespace $INFRA_NAMESPACE
   deployHelmChartFromDir "./src/mojafos/deployer/helm/infra" "$INFRA_NAMESPACE" "$INFRA_RELEASE_NAME"
+  echo -e "\n${GREEN}============================"
+  echo -e "Infrastructure Deployed"
+  echo -e "============================${RESET}\n"
 }
 
 function cloneRepo() {
@@ -123,13 +126,13 @@ function cloneRepo() {
   if [ -d "$cloned_directory_name" ]; then
     echo -e "${YELLOW}$cloned_directory_name Repo exists deleting and re-cloning ${RESET}"
     rm -rf "$cloned_directory_name"
-    git clone -b "$branch" "$repo_link" "$cloned_directory_name"
+    git clone -b "$branch" "$repo_link" "$cloned_directory_name" >> /dev/null 2>&1
   else
-    git clone -b "$branch" "$repo_link" "$cloned_directory_name"
+    git clone -b "$branch" "$repo_link" "$cloned_directory_name" >> /dev/null 2>&1
   fi
 
   if [ $? -eq 0 ]; then
-      echo "Repository cloned successfully."
+      echo "==> Repository cloned successfully."
   else
       echo "Failed to clone the repository."
   fi
@@ -154,10 +157,10 @@ function applyKubeManifests() {
     fi
 
     # Use 'kubectl apply' to apply manifests in the specified directory.
-    kubectl apply -f "$directory" -n "$namespace"
+    kubectl apply -f "$directory" -n "$namespace" >> /dev/null 2>&1
 
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}Kubernetes manifests applied successfully.${RESET}"
+        echo -e "==>Kubernetes manifests applied successfully."
     else
         echo -e "${RED}Failed to apply Kubernetes manifests.${RESET}"
     fi
@@ -232,10 +235,13 @@ function postPaymenthubDeploymentScript(){
 }
 
 function deployMojaloop() {
-  echo "Deploying Mojaloop vNext application manifests"
+  echo "Deploying Mojaloop vNext application manifests\n"
   createNamespace "$MOJALOOP_NAMESPACE"
+  echo
   cloneRepo "$MOJALOOPBRANCH" "$MOJALOOP_REPO_LINK" "$APPS_DIR" "$MOJALOOPREPO_DIR"
+  echo
   renameOffToYaml "${MOJALOOP_LAYER_DIRS[0]}"
+  echo
   configureMojaloop
 
   for index in "${!MOJALOOP_LAYER_DIRS[@]}"; do
@@ -248,6 +254,10 @@ function deployMojaloop() {
       echo -e "Proceeding ..."
     fi
   done
+
+  echo -e "\n${GREEN}============================"
+  echo -e "Mojaloop Deployed"
+  echo -e "============================${RESET}\n"
 }
 
 function deployPaymentHubEE() {
@@ -260,7 +270,13 @@ function deployPaymentHubEE() {
   do
     deployHelmChartFromDir "$APPS_DIR$PHREPO_DIR/helm/g2p-sandbox-fynarfin-SIT" "$PH_NAMESPACE" "$PH_RELEASE_NAME" "$PH_VALUES_FILE"
   done 
-  postPaymenthubDeploymentScript
+
+  echo -e "\n${YELLOW}Fixing Paymenthub post deployment issues(might take a while)...${RESET}"
+  postPaymenthubDeploymentScript >> /dev/null 2>&1
+
+  echo -e "\n${GREEN}============================"
+  echo -e "Paymenthub Deployed"
+  echo -e "============================${RESET}\n"
 }
 
 function deployFineract() {
@@ -270,12 +286,13 @@ function deployFineract() {
   configureFineract
 
   read -p "How many instances of fineract would you like to deploy? Enter number: " num_instances
-  echo -e "Deploying $num_instances instances of fineract"
 
-  if [ $num_instances -eq 0 ];then
+  if [[ -z "$num_instances" ]];then
     num_instances=2
   fi
-  
+
+  echo -e "Deploying $num_instances instances of fineract"
+
   # Check if the input is a valid integer
   for ((i=1; i<=num_instances; i++))
   do
@@ -283,15 +300,38 @@ function deployFineract() {
     sed -i "s/\([0-9]-\)\?communityapp.sandbox.fynarfin.io/$i-communityapp.sandbox.fynarfin.io/" "$FIN_VALUES_FILE"
     createNamespace "$FIN_NAMESPACE-$i"
     deployHelmChartFromDir "$APPS_DIR$FIN_REPO_DIR/helm/fineract" "$FIN_NAMESPACE-$i" "$FIN_RELEASE_NAME-$i" "$FIN_VALUES_FILE"
+
+      echo -e "\n${GREEN}============================"
+      echo -e "fineract-$i Deployed"
+      echo -e "============================${RESET}\n"
   done
 }
 
-function testApps {
+function test_ml {
   echo "TODO" #TODO Write function to test apps
 }
 
+function test_ph {
+  echo "TODO"
+}
+
+function test_fin {
+  local instance_name=$1
+}
+
 function printEndMessage {
-  echo "TODO" #TODO Write function to conclude script.
+  echo -e "========================================================================"
+  echo -e "Thank you for installing Mojaloop, Paymenthub and Fineract using Mojafos"
+  echo -e "========================================================================\n\n"
+  echo -e "TESTING"
+  echo -e "sudo ./run -u \$USER -m test ml #For testing mojaloop"
+  echo -e "sudo ./run -u \$USER -m test ph #For testing payment hub"
+  echo -e "sudo ./run -u \$USER -m test fin #For testing fineract\n\n\n"
+  echo -e "CHECK DEPLOYMENTS USING kubectl"
+  echo -e "kubectl get pods -n mojaloop #For testing mojaloop"
+  echo -e "kubectl get pods -n paymenthub #For testing paymenthub"
+  echo -e "kubectl get pods -n fineract-n #For testing fineract. n is a number of a fineract instance\n\n"
+  echo -e "Copyright © 2023 The Mifos Initiative"
 }
 
 function deployApps {
@@ -299,6 +339,5 @@ function deployApps {
   deployMojaloop
   deployPaymentHubEE
   deployFineract
-  testApps
   printEndMessage
 }

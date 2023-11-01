@@ -53,11 +53,11 @@ function set_linux_os_distro {
     else
         LINUX_OS="Untested"
     fi
-    printf "==> Linux OS is [%s] " "$LINUX_OS"
+    printf "\r==> Linux OS is [%s] " "$LINUX_OS"
 }
 
 function check_os_ok {
-    printf "==> checking OS and kubernetes distro is tested with mojafos scripts\n"
+    printf "\r==> checking OS and kubernetes distro is tested with mojafos scripts\n"
     set_linux_os_distro
 
     if [[ ! $LINUX_OS == "Ubuntu" ]]; then
@@ -67,9 +67,9 @@ function check_os_ok {
 }
 
 function install_prerequisites {
-    printf "==> Install any OS prerequisites , tools &  updates  ...\n"
+    printf "\n\r==> Install any OS prerequisites , tools &  updates  ...\n"
     if [[ $LINUX_OS == "Ubuntu" ]]; then
-        printf "    apt update \n"
+        printf "\rapt update \n"
         apt update > /dev/null 2>&1
 
         if [[ $k8s_distro == "microk8s" ]]; then
@@ -100,7 +100,7 @@ function install_prerequisites {
 
           echo "Docker has been installed."
       else
-          echo "Docker is already installed."
+          printf "\rDocker is already installed.\n"
       fi
 
       # Check if nc (netcat) is installed
@@ -113,13 +113,13 @@ function install_prerequisites {
 
           echo "nc (netcat) has been installed."
       else
-          echo "nc (netcat) is already installed."
+          printf "\rnc (netcat) is already installed.\n"
       fi
     fi
 }
 
 function add_hosts {
-    printf "==> Mojafos k8s install : update hosts file \n"
+    printf "==> Mojafos : update hosts file \n"
     ENDPOINTSLIST=(127.0.0.1   ml-api-adapter.local central-ledger.local account-lookup-service.local account-lookup-service-admin.local
     quoting-service.local central-settlement-service.local transaction-request-service.local central-settlement.local bulk-api-adapter.local
     moja-simulator.local sim-payerfsp.local sim-payeefsp.local sim-testfsp1.local sim-testfsp2.local sim-testfsp3.local sim-testfsp4.local
@@ -142,7 +142,7 @@ function set_k8s_distro {
     else
         k8s_distro=`echo "$k8s_distro" | perl -ne 'print lc'`
         if [[ "$k8s_distro" == "microk8s" || "$k8s_distro" == "k3s" ]]; then
-            printf "==> kubernetes distro set to [%s] \n" "$k8s_distro"
+            printf "\r==> kubernetes distro set to [%s] \n" "$k8s_distro"
         else
             printf "** Error : invalid kubernetes distro specified. Valid options are microk8s or k3s \n"
             exit 1
@@ -188,7 +188,7 @@ function set_k8s_version {
         showUsage
         exit 1
     fi
-    printf "==> kubernetes version to install set to [%s] \n" "$K8S_VERSION"
+    printf "\r==> kubernetes version to install set to [%s] \n" "$K8S_VERSION"
 }
 
 function do_microk8s_install {
@@ -231,7 +231,7 @@ function do_k3s_install {
     printf "========================================================================================\n"
     # ensure k8s_user has clean .kube/config
     rm -rf $k8s_user_home/.kube >> /dev/null 2>&1
-    printf "==> installing k3s "
+    printf "\r==> installing k3s "
     #echo $K8S_VERSION
     curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" \
                             INSTALL_K3S_CHANNEL="v$K8S_VERSION" \
@@ -262,7 +262,7 @@ function do_k3s_install {
     echo "export KUBECONFIG=\$HOME/k3s.yaml" >> $k8s_user_home/.bash_profile
 
     # install helm
-    printf "==> installing helm "
+    printf "\r==> installing helm "
     helm_arch_str=""
     if [[ "$k8s_arch" == "x86_64" ]]; then
         helm_arch_str="amd64"
@@ -287,7 +287,7 @@ function do_k3s_install {
     fi
 
     #install nginx
-    printf "==> installing nginx ingress chart and wait for it to be ready "
+    printf "\r==> installing nginx ingress chart and wait for it to be ready "
     su - $k8s_user -c "helm install --wait --timeout 300s ingress-nginx ingress-nginx --repo https://kubernetes.github.io/ingress-nginx" > /dev/null 2>&1
     # TODO : check to ensure that the ingress is indeed running
     nginx_pod_name=$(kubectl get pods | grep nginx | awk '{print $1}')
@@ -307,7 +307,7 @@ function do_k3s_install {
 }
 
 function install_k8s_tools {
-    printf "==> install kubernetes tools, kubens, kubectx kustomize \n"
+    printf "\r==> install kubernetes tools, kubens, kubectx kustomize \n"
     curl -s -L https://github.com/ahmetb/kubectx/releases/download/v0.9.4/kubens_v0.9.4_linux_x86_64.tar.gz| gzip -d -c | tar xf -
     mv ./kubens /usr/local/bin > /dev/null 2>&1
     curl -s -L https://github.com/ahmetb/kubectx/releases/download/v0.9.4/kubectx_v0.9.4_linux_x86_64.tar.gz | gzip -d -c | tar xf -
@@ -320,7 +320,7 @@ function install_k8s_tools {
 
 function add_helm_repos {
     # see readme at https://github.com/mojaloop/helm for required helm libs
-    printf "${BLUE}==> add the helm repos required to install and run infrastructure for Mojaloop, Paymenthub EE and Fineract${RESET}\n"
+    printf "\r==> add the helm repos required to install and run infrastructure for Mojaloop, Paymenthub EE and Fineract\n"
     su - $k8s_user -c "helm repo add kiwigrid https://kiwigrid.github.io" > /dev/null 2>&1
     su - $k8s_user -c "helm repo add kokuwa https://kokuwaio.github.io/helm-charts" > /dev/null 2>&1  #fluentd
     su - $k8s_user -c "helm repo add elastic https://helm.elastic.co" > /dev/null 2>&1
@@ -348,7 +348,7 @@ function configure_k8s_user_env {
         echo "alias cdml=\"cd $k8s_user_home/mojafos\" " >>  $k8s_user_home/.bashrc
         printf "#ML_END end of config added by mojafos #\n" >> $k8s_user_home/.bashrc
     else
-        printf "==> Configuration for .bashrc for %s for user %s already exists ..skipping\n" "$k8s_distro" "$k8s_user"
+        printf "\r==> Configuration for .bashrc for %s for user %s already exists ..skipping\n" "$k8s_distro" "$k8s_user"
     fi
 }
 
@@ -395,9 +395,7 @@ function delete_k8s {
         if [[ $? -eq 0  ]]; then
             printf " [ ok ] \n"
         else
-            printf " [ k3s delete failed ] \n"
-            printf "** was k3s installed ?? \n"
-            printf "   if so please try running \"/usr/local/bin/k3s-uninstall.sh\" manually ** \n"
+            echo -e "\n==> k3s not installed"
         fi
     fi
     # remove config from user .bashrc
@@ -405,7 +403,7 @@ function delete_k8s {
 }
 
 function check_k8s_installed {
-    printf "==> Check the cluster is available and ready from kubectl  "
+    printf "\r==> Check the cluster is available and ready from kubectl  "
     k8s_ready=`su - $k8s_user -c "kubectl get nodes" | perl -ne 'print  if s/^.*Ready.*$/Ready/'`
     if [[ ! "$k8s_ready" == "Ready" ]]; then
         printf "** Error : kubernetes is not installed , please run $0 -m install -u $k8s_user \n"
@@ -416,11 +414,16 @@ function check_k8s_installed {
 }
 
 function print_end_message {
-    echo -e "${GREEN}Environment setup successful${RESET}"
+    echo -e "\n${GREEN}============================"
+    echo -e "Environment setup successful"
+    echo -e "============================${RESET}\n"
 }
 
 function print_end_message_tear_down {
-    echo -e "${GREEN}Environment tear down successful${RESET}"
+  echo -e "\n\n=============================================="
+  echo -e "Thank you for using Mojafos cleanup successful"
+  echo -e "==============================================\n\n"
+  echo -e "Copyright © 2023 The Mifos Initiative"
 }
 
 ################################################################################
@@ -542,10 +545,8 @@ function envSetupMain {
         add_helm_repos
         configure_k8s_user_env
         check_k8s_installed
-        printf "==> kubernetes distro:[%s] version:[%s] is now configured for user [%s] and ready for mojaloop deployment \n" \
+        printf "\r==> kubernetes distro:[%s] version:[%s] is now configured for user [%s] and ready for mojaloop deployment \n" \
                     "$k8s_distro" "$K8S_VERSION" "$k8s_user"
-        printf "    To deploy mojaloop, please su - %s from root or login as user [%s] and then \n"  "$k8s_user" "$k8s_user"
-        printf "    please execute %s/mojaloop-install.sh\n" "$SCRIPTS_DIR"
         print_end_message
     elif [[ "$mode" == "cleanup" ]]  ; then
         delete_k8s
