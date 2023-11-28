@@ -260,6 +260,7 @@ function do_k3s_install {
 
     # configure user environment to communicate with k3s kubernetes
     export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+    sudo chown $k8s_user $KUBECONFIG
     cp /etc/rancher/k3s/k3s.yaml  $k8s_user_home/k3s.yaml
     chown $k8s_user  $k8s_user_home/k3s.yaml
     chmod 600  $k8s_user_home/k3s.yaml
