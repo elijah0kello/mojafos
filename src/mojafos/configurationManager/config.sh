@@ -15,7 +15,7 @@ MOJALOOP_REPO_LINK="https://github.com/mojaloop/platform-shared-tools.git"
 MOJALOOP_LAYER_DIRS=("$BASE_DIR/src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/crosscut" "$BASE_DIR/src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/apps" "$BASE_DIR/src/mojafos/deployer/apps/mojaloop/packages/deployment/k8s/ttk" )
 MOJALOOP_VALUES_FILE="$BASE_DIR/src/mojafos/configurationManager/mojaloop_values.json"
 #paymenthubee
-PHBRANCH="master"
+PHBRANCH="v1.2.0-release"
 PHREPO_DIR="ph"
 PH_NAMESPACE="paymenthub"
 PH_RELEASE_NAME="moja-ph"

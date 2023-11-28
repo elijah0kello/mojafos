@@ -336,7 +336,7 @@ function printEndMessage {
 
 function deployApps {
   echo -e "${BLUE}Deploying Apps ...${RESET}"
-  deployMojaloop
+  # deployMojaloop
   deployPaymentHubEE
   deployFineract
   printEndMessage
