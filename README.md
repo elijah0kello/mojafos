@@ -7,7 +7,7 @@ The deployable package is intended to simplify and automate the deployment proce
 
 ## Pre-requisites
 Make sure you have the following before you go through this guide.
-- You should be running Ubuntu 22.04 LTS on the machine where you are running this script
+- You should be running Ubuntu 20.04 LTS on the machine where you are running this script
 - 32GB of RAM
 - 30GB+ free space in your home directory
 

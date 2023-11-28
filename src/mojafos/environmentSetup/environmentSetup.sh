@@ -115,6 +115,17 @@ function install_prerequisites {
       else
           printf "\rnc (netcat) is already installed.\n"
       fi
+
+      # Check if jq is installed  
+      if ! command -v jq &> /dev/null; then
+          echo "jq is not installed"
+          sudo apt-get update
+          sudo apt-get -y install jq
+
+          echo "jq is now installed"
+      else
+          printf "jq is already installed\n"
+      fi
     fi
 }
 
