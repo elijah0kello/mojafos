@@ -231,7 +231,7 @@ function do_microk8s_install {
 
     # ensure .kube/config points to this new cluster and KUBECONFIG is not set in .bashrc
     perl -p -i.bak -e 's/^.*KUBECONFIG.*$//g' $k8s_user_home/.bashrc
-    perl -p -i.bak -e 's/^.*KUBECONFIG.*$//g' $k8s_user_home/.bash_profile >> /dev/null 2>&1
+    perl -p -i.bak -e 's/^.*KUBECONFIG.*$//g' $k8s_user_home/.bash_profile
     chown -f -R $k8s_user $k8s_user_home/.kube
     microk8s config > $k8s_user_home/.kube/config
 }
@@ -268,10 +268,10 @@ function do_k3s_install {
 
     perl -p -i.bak -e 's/^.*KUBECONFIG.*$//g' $k8s_user_home/.bashrc
     echo "export KUBECONFIG=\$HOME/k3s.yaml" >>  $k8s_user_home/.bashrc
-    perl -p -i.bak -e 's/^.*source .bashrc.*$//g' $k8s_user_home/.bash_profile >> /dev/null 2>&1
-    perl -p  -i.bak2 -e 's/^.*export KUBECONFIG.*$//g' $k8s_user_home/.bash_profile >> /dev/null 2>&1
-    echo "source .bashrc" >>   $k8s_user_home/.bash_profile >> /dev/null 2>&1
-    echo "export KUBECONFIG=\$HOME/k3s.yaml" >> $k8s_user_home/.bash_profile >> /dev/null 2>&1
+    perl -p -i.bak -e 's/^.*source .bashrc.*$//g' $k8s_user_home/.bash_profile
+    perl -p  -i.bak2 -e 's/^.*export KUBECONFIG.*$//g' $k8s_user_home/.bash_profile
+    echo "source .bashrc" >>   $k8s_user_home/.bash_profile
+    echo "export KUBECONFIG=\$HOME/k3s.yaml" >> $k8s_user_home/.bash_profile
 
     # install helm
     printf "\r==> installing helm "
