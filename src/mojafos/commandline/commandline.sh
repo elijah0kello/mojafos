@@ -3,13 +3,6 @@
 source ./src/mojafos/environmentSetup/environmentSetup.sh
 source ./src/mojafos/deployer/deployer.sh
 
-# Text color codes
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-RESET='\033[0m'
-
 function welcome {
   echo -e "${BLUE}"
   echo -e "███    ███  ██████       ██  █████  ███████  ██████  ███████ "
@@ -22,17 +15,35 @@ function welcome {
 }
 
 function showUsage {
-  echo -e "Show usage for Mojafos"
+  if [ $# -ne 0 ] ; then
+		echo "Incorrect number of arguments passed to function $0"
+		exit 1
+	else
+echo  "USAGE: $0 -m [mode] -u [user] -d [true/false]  
+Example 1 : $0  -m deploy -u \$USER -d true # install mojafos with debug mode and user \$USER
+Example 2 : $0  -m cleanup -u \$USER -d true # delete mojafos with debug mode and user \$USER
+Example 3 : $0  -m deploy -u \$USER -d false # install mojafos without debug mode and user \$USER
+
+Options:
+-m mode ............... install|delete (-m is required)
+-u user................ user that the process will use for execution
+-d debug............... debug mode. if set debug is true, if not set debug is false
+-h|H .................. display this message
+"
+  fi
+  
 }
 
 function getoptions {
   local mode_opt
 
-  while getopts "m:n:u:hH" OPTION ; do
+  while getopts "m:n:d:u:hH" OPTION ; do
     case "${OPTION}" in
             m)	    mode_opt="${OPTARG}"
             ;;
             k)      k8s_distro="${OPTARG}"
+            ;;
+            d)      debug="${OPTARG}"
             ;;
             v)	    k8s_user_version="${OPTARG}"
             ;;
@@ -50,7 +61,12 @@ function getoptions {
 
   if [ -z "$mode_opt" ]; then
     echo "Error: Mode argument is required."
+    showUsage
     exit 1
+  fi
+
+  if [ -z "$debug" ]; then
+    debug=false
   fi
 
   mode="$mode_opt"
@@ -97,7 +113,7 @@ function main {
     deployInfrastructure
     deployApps
   elif [ $mode == "cleanup" ]; then
-    echo -e "${BLUE}Cleaning up all traces of Mojafos${RESET}"
+    logWithVerboseCheck $debug info "Cleaning up all traces of Mojafos"
     envSetupMain "$mode" "k3s" "1.26"
   else
     showUsage

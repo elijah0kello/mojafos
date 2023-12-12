@@ -74,7 +74,4 @@ Copyright © 2023 The Mifos Initiative
 ## WHAT HAS NOT YET BEEN DONE
 - Clear logging and providing option for verbosity
 - Proper function return codes to support proper exception handling
-- Support to allow the user specify the number of fineract instances to deploy
-- Stabilise paymenthub deployment 
-- Add a note in the logs to state that this is not a production grade deployment of the softwares
-- Show usage message
+

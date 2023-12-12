@@ -29,7 +29,7 @@ function check_resources_ok {
 function set_user {
   # set the k8s_user
 #   k8s_user=`whoami | cut -d " " -f1`
-    echo "k8s user is $k8s_user"
+    logWithVerboseCheck $debug info "k8s user is $k8s_user"
 }
 
 function k8s_already_installed {
@@ -82,23 +82,25 @@ function install_prerequisites {
           echo "Docker is not installed. Installing Docker..."
 
           # Update package index and install prerequisites
-          sudo apt update
-          sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+          sudo apt update >> /dev/null 2>&1
+          sudo apt install -y apt-transport-https ca-certificates curl software-properties-common >> /dev/null 2>&1
 
           # Add Docker GPG key
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg >> /dev/null 2>&1
 
           # Add Docker repository
-          echo "deb [signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >> /dev/null 2>&1
 
           # Update package index again and install Docker
-          sudo apt update
-          sudo apt install -y docker-ce docker-ce-cli containerd.io
+          sudo apt update >> /dev/null 2>&1
+          sudo apt install -y docker-ce docker-ce-cli containerd.io >> /dev/null 2>&1
 
           # Add your user to the docker group (optional)
           sudo usermod -aG docker $USER
-
-          echo "Docker has been installed."
+          
+          if ! command -v docker &> /dev/null ; then 
+            prinf "ok \n"
+          fi
       else
           printf "\rDocker is already installed.\n"
       fi
@@ -108,8 +110,8 @@ function install_prerequisites {
           echo "nc (netcat) is not installed. Installing..."
 
           # Update package manager repositories and install nc
-          sudo apt-get update
-          sudo apt-get install -y netcat
+          apt-get update >> /dev/null 2>&1
+          apt-get install -y netcat >> /dev/null 2>&1
 
           echo "nc (netcat) has been installed."
       else
