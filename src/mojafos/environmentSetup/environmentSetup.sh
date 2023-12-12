@@ -79,7 +79,7 @@ function install_prerequisites {
 
       # Check if Docker is installed
       if ! command -v docker &> /dev/null; then
-          echo "Docker is not installed. Installing Docker..."
+          logWithVerboseCheck $debug debug "Docker is not installed. Installing Docker..."
 
           # Update package index and install prerequisites
           sudo apt update >> /dev/null 2>&1
@@ -98,35 +98,33 @@ function install_prerequisites {
           # Add your user to the docker group (optional)
           sudo usermod -aG docker $USER
           
-          if ! command -v docker &> /dev/null ; then 
-            prinf "ok \n"
-          fi
+          prinf "ok \n"
       else
-          printf "\rDocker is already installed.\n"
+          logWithVerboseCheck $debug debug "Docker is already installed.\n"
       fi
 
       # Check if nc (netcat) is installed
       if ! command -v nc &> /dev/null; then
-          echo "nc (netcat) is not installed. Installing..."
+          logWithVerboseCheck $debug debug "nc (netcat) is not installed. Installing..."
 
           # Update package manager repositories and install nc
           apt-get update >> /dev/null 2>&1
           apt-get install -y netcat >> /dev/null 2>&1
-
-          echo "nc (netcat) has been installed."
+          
+          printf "ok\n"
       else
-          printf "\rnc (netcat) is already installed.\n"
+          logWithVerboseCheck $debug debug "nc (netcat) is already installed.\n"
       fi
 
       # Check if jq is installed  
       if ! command -v jq &> /dev/null; then
-          echo "jq is not installed"
-          sudo apt-get update
-          sudo apt-get -y install jq
+          logWithVerboseCheck $debug debug "jq is not installed. Installing ..."
+          sudo apt-get update >> /dev/null 2>&1
+          sudo apt-get -y install jq >> /dev/null 2>&1
 
-          echo "jq is now installed"
+          printf "ok\n"
       else
-          printf "jq is already installed\n"
+          logWithVerboseCheck $debug debug "jq is already installed\n"
       fi
     fi
 }
