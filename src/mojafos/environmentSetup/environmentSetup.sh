@@ -98,7 +98,7 @@ function install_prerequisites {
           # Add your user to the docker group (optional)
           sudo usermod -aG docker $USER
           
-          prinf "ok \n"
+          printf "ok \n"
       else
           logWithVerboseCheck $debug debug "Docker is already installed.\n"
       fi

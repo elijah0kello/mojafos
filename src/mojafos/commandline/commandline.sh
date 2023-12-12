@@ -20,9 +20,9 @@ function showUsage {
 		exit 1
 	else
 echo  "USAGE: $0 -m [mode] -u [user] -d [true/false]  
-Example 1 : $0  -m deploy -u \$USER -d true # install mojafos with debug mode and user \$USER
-Example 2 : $0  -m cleanup -u \$USER -d true # delete mojafos with debug mode and user \$USER
-Example 3 : $0  -m deploy -u \$USER -d false # install mojafos without debug mode and user \$USER
+Example 1 : sudo $0  -m deploy -u \$USER -d true # install mojafos with debug mode and user \$USER
+Example 2 : sudo $0  -m cleanup -u \$USER -d true # delete mojafos with debug mode and user \$USER
+Example 3 : sudo $0  -m deploy -u \$USER -d false # install mojafos without debug mode and user \$USER
 
 Options:
 -m mode ............... install|delete (-m is required)
