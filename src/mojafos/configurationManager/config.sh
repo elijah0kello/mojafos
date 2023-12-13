@@ -158,12 +158,12 @@ function configurePH() {
 
   # Check if make is installed
   if ! command -v make &> /dev/null; then
-      echo "make is not installed. Installing make..."
-      sudo apt update
-      sudo apt install -y make
-      echo "make has been installed."
+      logWithVerboseCheck $debug info "make is not installed. Installing ..."
+      sudo apt update >> /dev/null 2>&1
+      sudo apt install -y make >> /dev/null 2>&1
+      logWithVerboseCheck $debug info "ok"
   else
-      echo "make is installed. Proceeding to configure"
+      logWithVerboseCheck $debug info "make is installed. Proceeding to configure"
   fi
   # create secrets for paymenthub namespace and infra namespace
   cd es-secret || exit 1
