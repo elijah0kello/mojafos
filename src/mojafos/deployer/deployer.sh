@@ -94,7 +94,11 @@ function createNamespace () {
 function deployInfrastructure () {
   printf "==> Deploying infrastructure \n"
   createNamespace $INFRA_NAMESPACE
-  deployHelmChartFromDir "./src/mojafos/deployer/helm/infra" "$INFRA_NAMESPACE" "$INFRA_RELEASE_NAME"
+  if [ "$debug" = true ]; then
+    deployHelmChartFromDir "./src/mojafos/deployer/helm/infra" "$INFRA_NAMESPACE" "$INFRA_RELEASE_NAME"
+  else 
+    deployHelmChartFromDir "./src/mojafos/deployer/helm/infra" "$INFRA_NAMESPACE" "$INFRA_RELEASE_NAME" >> /dev/null 2>&1
+  fi
   echo -e "\n${GREEN}============================"
   echo -e "Infrastructure Deployed"
   echo -e "============================${RESET}\n"
@@ -235,7 +239,7 @@ function postPaymenthubDeploymentScript(){
 }
 
 function deployMojaloop() {
-  echo "Deploying Mojaloop vNext application manifests\n"
+  echo "Deploying Mojaloop vNext application manifests"
   createNamespace "$MOJALOOP_NAMESPACE"
   echo
   cloneRepo "$MOJALOOPBRANCH" "$MOJALOOP_REPO_LINK" "$APPS_DIR" "$MOJALOOPREPO_DIR"
@@ -268,7 +272,11 @@ function deployPaymentHubEE() {
   
   for((i=1; i<=2; i++))
   do
-    deployHelmChartFromDir "$APPS_DIR$PHREPO_DIR/helm/g2p-sandbox-fynarfin-SIT" "$PH_NAMESPACE" "$PH_RELEASE_NAME" "$PH_VALUES_FILE"
+    if [ "$debug" = true ]; then
+      deployHelmChartFromDir "$APPS_DIR$PHREPO_DIR/helm/g2p-sandbox-fynarfin-SIT" "$PH_NAMESPACE" "$PH_RELEASE_NAME" "$PH_VALUES_FILE"
+    else 
+      deployHelmChartFromDir "$APPS_DIR$PHREPO_DIR/helm/g2p-sandbox-fynarfin-SIT" "$PH_NAMESPACE" "$PH_RELEASE_NAME" "$PH_VALUES_FILE" >> /dev/null 2>&1
+    fi
   done 
 
   echo -e "\n${YELLOW}Fixing Paymenthub post deployment issues(might take a while)...${RESET}"
@@ -299,7 +307,11 @@ function deployFineract() {
     sed -i "s/\([0-9]-\)\?fynams.sandbox.fynarfin.io/$i-fynams.sandbox.fynarfin.io/" "$FIN_VALUES_FILE"
     sed -i "s/\([0-9]-\)\?communityapp.sandbox.fynarfin.io/$i-communityapp.sandbox.fynarfin.io/" "$FIN_VALUES_FILE"
     createNamespace "$FIN_NAMESPACE-$i"
-    deployHelmChartFromDir "$APPS_DIR$FIN_REPO_DIR/helm/fineract" "$FIN_NAMESPACE-$i" "$FIN_RELEASE_NAME-$i" "$FIN_VALUES_FILE"
+    if [ "$debug" = true ]; then
+      deployHelmChartFromDir "$APPS_DIR$FIN_REPO_DIR/helm/fineract" "$FIN_NAMESPACE-$i" "$FIN_RELEASE_NAME-$i" "$FIN_VALUES_FILE"
+    else 
+      deployHelmChartFromDir "$APPS_DIR$FIN_REPO_DIR/helm/fineract" "$FIN_NAMESPACE-$i" "$FIN_RELEASE_NAME-$i" "$FIN_VALUES_FILE" >> /dev/null 2>&1
+    fi
 
       echo -e "\n${GREEN}============================"
       echo -e "fineract-$i Deployed"
@@ -320,13 +332,9 @@ function test_fin {
 }
 
 function printEndMessage {
-  echo -e "========================================================================"
-  echo -e "Thank you for installing Mojaloop, Paymenthub and Fineract using Mojafos"
-  echo -e "========================================================================\n\n"
-  echo -e "TESTING"
-  echo -e "sudo ./run -u \$USER -m test ml #For testing mojaloop"
-  echo -e "sudo ./run -u \$USER -m test ph #For testing payment hub"
-  echo -e "sudo ./run -u \$USER -m test fin #For testing fineract\n\n\n"
+  echo -e "==========================="
+  echo -e "Thank you for using Mojafos"
+  echo -e "===========================\n\n"
   echo -e "CHECK DEPLOYMENTS USING kubectl"
   echo -e "kubectl get pods -n mojaloop #For testing mojaloop"
   echo -e "kubectl get pods -n paymenthub #For testing paymenthub"
