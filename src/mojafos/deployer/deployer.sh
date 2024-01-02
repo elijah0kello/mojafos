@@ -306,6 +306,7 @@ function deployFineract() {
   do
     sed -i "s/\([0-9]-\)\?fynams.sandbox.fynarfin.io/$i-fynams.sandbox.fynarfin.io/" "$FIN_VALUES_FILE"
     sed -i "s/\([0-9]-\)\?communityapp.sandbox.fynarfin.io/$i-communityapp.sandbox.fynarfin.io/" "$FIN_VALUES_FILE"
+    sed -i "s/\([0-9]-\)\?webapp.sandbox.fynarfin.io/$i-webapp.sandbox.fynarfin.io/" "$FIN_VALUES_FILE"
     createNamespace "$FIN_NAMESPACE-$i"
     if [ "$debug" = true ]; then
       deployHelmChartFromDir "$APPS_DIR$FIN_REPO_DIR/helm/fineract" "$FIN_NAMESPACE-$i" "$FIN_RELEASE_NAME-$i" "$FIN_VALUES_FILE"

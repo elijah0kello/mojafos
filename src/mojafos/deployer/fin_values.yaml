@@ -57,7 +57,7 @@ webapp:
   image: "fintecheando/web-app:master"
   ingress:
     enabled: true
-    hostname: ""
+    hostname: "webapp.sandbox.fynarfin.io"
     path: "/web"
     annotations:
       kubernetes.io/ingress.class: "nginx"
