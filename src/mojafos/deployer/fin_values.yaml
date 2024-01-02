@@ -54,7 +54,7 @@ communityapp:
 
 webapp:
   enabled: true
-  image: "fintecheando/web-app:latest"
+  image: "fintecheando/web-app:master"
   ingress:
     enabled: true
     hostname: ""
