@@ -53,10 +53,10 @@ communityapp:
       memory: "500m"
 
 webapp:
-  enabled: false
+  enabled: true
   image: "fintecheando/web-app:latest"
   ingress:
-    enabled: false
+    enabled: true
     hostname: ""
     path: "/web"
     annotations:
