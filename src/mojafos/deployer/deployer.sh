@@ -225,12 +225,12 @@ function addKubeConfig(){
   K8sConfigDir="$k8s_user_home/.kube"
 
   if [ ! -d "$K8sConfigDir" ]; then
-      mkdir -p "$K8sConfigDir"
+      su - $k8s_user -c "mkdir -p $K8sConfigDir"
       echo "K8sConfigDir created: $K8sConfigDir"
   else
       echo "K8sConfigDir already exists: $K8sConfigDir"
   fi
-  cp $k8s_user_home/k3s.yaml $K8sConfigDir/config
+  su - $k8s_user -c "cp $k8s_user_home/k3s.yaml $K8sConfigDir/config"
 }
 
 #Function to run kong migrations in Kong init container 
