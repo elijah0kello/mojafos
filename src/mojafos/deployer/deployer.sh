@@ -73,6 +73,34 @@ function deployHelmChartFromDir() {
 
 }
 
+function deployHelmChartFromRepo(){
+  #parameters
+  local namespace="$1"
+
+  # Check if Helm is installed
+  if ! command -v helm &>/dev/null; then
+    echo "Helm is not installed. Please install Helm first."
+    exit 1
+  fi
+
+  # install the helm chart 
+  LATEST=$(curl -s https://api.github.com/repos/prometheus-operator/prometheus-operator/releases/latest | jq -cr .tag_name)
+  su - $k8s_user -c "curl -sL https://github.com/prometheus-operator/prometheus-operator/releases/download/${LATEST}/bundle.yaml | kubectl create -f -"
+  su - $k8s_user -c "helm install $PH_RELEASE_NAME g2p-sandbox/ph-ee-g2psandbox --version 1.3.1 -n $namespace"
+
+  # Use kubectl to get the resource count in the specified namespace
+  resource_count=$(kubectl get pods -n "$namespace" --ignore-not-found=true 2>/dev/null | grep -v "No resources found" | wc -l)
+
+  # Check if the deployment was successful
+  if [ $resource_count -gt 0 ]; then
+    echo "Helm chart deployed successfully."
+  else
+    echo -e "${RED}Helm chart deployment failed.${RESET}"
+    cleanUp
+  fi
+  
+}
+
 function createNamespace () {
   local namespace=$1
   printf "==> Creating namespace $namespace \n"
@@ -287,6 +315,18 @@ function deployPaymentHubEE() {
   echo -e "============================${RESET}\n"
 }
 
+function deployPH(){
+  echo "Deploying PaymentHub EE"
+  createNamespace "$PH_NAMESPACE"
+  cloneRepo "$PHBRANCH" "$PH_REPO_LINK" "$APPS_DIR" "$PHREPO_DIR"
+  configurePH "$APPS_DIR$PHREPO_DIR/helm"
+  deployHelmChartFromRepo "$PH_NAMESPACE"
+
+  echo -e "\n${GREEN}============================"
+  echo -e "Paymenthub Deployed"
+  echo -e "============================${RESET}\n"
+}
+
 function deployFineract() {
   echo -e "${BLUE}Deploying Fineract${RESET}"
 
@@ -339,14 +379,35 @@ function printEndMessage {
   echo -e "CHECK DEPLOYMENTS USING kubectl"
   echo -e "kubectl get pods -n mojaloop #For testing mojaloop"
   echo -e "kubectl get pods -n paymenthub #For testing paymenthub"
-  echo -e "kubectl get pods -n fineract-n #For testing fineract. n is a number of a fineract instance\n\n"
+  echo -e "kubectl get pods -n fineract-x #For testing fineract. x is a number of a fineract instance\n\n"
   echo -e "Copyright © 2023 The Mifos Initiative"
 }
 
 function deployApps {
-  echo -e "${BLUE}Deploying Apps ...${RESET}"
-  deployMojaloop
-  deployPaymentHubEE
-  deployFineract
+  printf "${YELLOW}What would you like to Deploy? all/moja/fin/ph ${RESET}"
+  read -p " " appsToDeploy
+  echo $appsToDeploy
+
+  if [ -z "$appsToDeploy" ]; then
+    echo -e "${BLUE}Deploying all apps ...${RESET}"
+    deployMojaloop
+    # deployPaymentHubEE
+    deployPH
+    deployFineract
+  elif [[ "$appsToDeploy" == "all" ]]; then
+    echo -e "${BLUE}Deploying all apps ...${RESET}"
+    deployMojaloop
+    deployPH
+    deployFineract
+  elif [[ "$appsToDeploy" == "moja" ]];then
+    deployMojaloop
+  elif [[ "$appsToDeploy" == "fin" ]]; then 
+    deployFineract
+  elif [[ "$appsToDeploy" == "ph" ]]; then
+    deployPH
+  else 
+    echo -e "${RED}Please enter a valid option ${RESET}"
+    cleanUp
+  fi
   printEndMessage
 }
