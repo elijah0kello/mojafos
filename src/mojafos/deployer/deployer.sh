@@ -221,6 +221,18 @@ function runFailedSQLStatements(){
   fi
 }
 
+function addKubeConfig(){
+  K8sConfigDir="$k8s_user_home/.kube"
+
+  if [ ! -d "$K8sConfigDir" ]; then
+      mkdir -p "$K8sConfigDir"
+      echo "K8sConfigDir created: $K8sConfigDir"
+  else
+      echo "K8sConfigDir already exists: $K8sConfigDir"
+  fi
+  cp $k8s_user_home/k3s.yaml $K8sConfigDir/config
+}
+
 #Function to run kong migrations in Kong init container 
 function runKongMigrations(){
   echo "Fixing Kong Migrations"
@@ -409,5 +421,6 @@ function deployApps {
     echo -e "${RED}Please enter a valid option ${RESET}"
     cleanUp
   fi
+  addKubeConfig >> /dev/null 2>&1
   printEndMessage
 }
