@@ -352,9 +352,17 @@ function configure_k8s_user_env {
     if [[ $? -ne 0  ]]; then
         printf "==> Adding configuration for %s to %s .bashrc\n" "$k8s_distro" "$k8s_user"
         printf "%s\n" "$start_message" >> $k8s_user_home/.bashrc
-        cp $k8s_user_home/k3s.yaml $k8s_user_home/.kube/config
         echo "source <(kubectl completion bash)" >> $k8s_user_home/.bashrc # add autocomplete permanently to your bash shell.
         echo "alias k=kubectl " >>  $k8s_user_home/.bashrc
+        K8sConfigDir="$k8s_user_home/.kube"
+
+        if [ ! -d "$K8sConfigDir" ]; then
+            mkdir -p "$K8sConfigDir"
+            echo "K8sConfigDir created: $K8sConfigDir"
+        else
+            echo "K8sConfigDir already exists: $K8sConfigDir"
+        fi
+        cp $k8s_user_home/k3s.yaml $K8sConfigDir/config
         echo "complete -F __start_kubectl k " >>  $k8s_user_home/.bashrc
         echo "alias ksetns=\"kubectl config set-context --current --namespace\" " >>  $k8s_user_home/.bashrc
         echo "alias ksetuser=\"kubectl config set-context --current --user\" "  >>  $k8s_user_home/.bashrc
