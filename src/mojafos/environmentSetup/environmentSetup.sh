@@ -262,7 +262,6 @@ function do_k3s_install {
     export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
     sudo chown $k8s_user $KUBECONFIG
     cp /etc/rancher/k3s/k3s.yaml  $k8s_user_home/k3s.yaml
-    cp $k8s_user_home/k3s.yaml $k8s_user_home/.kube/config
     chown $k8s_user  $k8s_user_home/k3s.yaml
     chmod 600  $k8s_user_home/k3s.yaml
     sudo chmod 600 $KUBECONFIG
@@ -353,6 +352,7 @@ function configure_k8s_user_env {
     if [[ $? -ne 0  ]]; then
         printf "==> Adding configuration for %s to %s .bashrc\n" "$k8s_distro" "$k8s_user"
         printf "%s\n" "$start_message" >> $k8s_user_home/.bashrc
+        cp $k8s_user_home/k3s.yaml $k8s_user_home/.kube/config
         echo "source <(kubectl completion bash)" >> $k8s_user_home/.bashrc # add autocomplete permanently to your bash shell.
         echo "alias k=kubectl " >>  $k8s_user_home/.bashrc
         echo "complete -F __start_kubectl k " >>  $k8s_user_home/.bashrc
