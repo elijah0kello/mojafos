@@ -2,3 +2,19 @@ ph-ee-engine:
   elasticsearch:
     volumeClaimTemplate:
       storageClassName: "local-path"
+  
+  notifications:
+    limits:
+      cpu: "2000m"
+      memory: "1000M"
+    requests:
+      cpu: "1m"
+      memory: "1M"
+  
+  operations:
+    limits:
+      cpu: "2000m"
+      memory: "1000M"
+    requests:
+      cpu: "1m"
+      memory: "1M" 
