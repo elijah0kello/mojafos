@@ -11,10 +11,10 @@ ph-ee-engine:
       cpu: "1m"
       memory: "1M"
   
-  operations:
+  operations_app:
     limits:
       cpu: "1000m"
-      memory: "4000M"
+      memory: "2000M"
     requests:
       cpu: "1m"
       memory: "1M" 
