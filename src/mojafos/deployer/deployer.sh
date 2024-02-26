@@ -86,7 +86,8 @@ function deployHelmChartFromRepo(){
   # install the helm chart 
   LATEST=$(curl -s https://api.github.com/repos/prometheus-operator/prometheus-operator/releases/latest | jq -cr .tag_name)
   su - $k8s_user -c "curl -sL https://github.com/prometheus-operator/prometheus-operator/releases/download/${LATEST}/bundle.yaml | kubectl create -f -"
-  su - $k8s_user -c "helm install $PH_RELEASE_NAME g2p-sandbox/ph-ee-g2psandbox --version 1.3.1 -n $namespace"
+  echo "$PH_VALUES_FILE"
+  su - $k8s_user -c "helm install $PH_RELEASE_NAME g2p-sandbox/ph-ee-g2psandbox --version 1.3.1 -n $namespace -f $PH_VALUES_FILE"
 
   # Use kubectl to get the resource count in the specified namespace
   resource_count=$(kubectl get pods -n "$namespace" --ignore-not-found=true 2>/dev/null | grep -v "No resources found" | wc -l)
@@ -333,6 +334,7 @@ function deployPH(){
   cloneRepo "$PHBRANCH" "$PH_REPO_LINK" "$APPS_DIR" "$PHREPO_DIR"
   configurePH "$APPS_DIR$PHREPO_DIR/helm"
   deployHelmChartFromRepo "$PH_NAMESPACE"
+  # runKongMigrations
 
   echo -e "\n${GREEN}============================"
   echo -e "Paymenthub Deployed"
@@ -418,8 +420,11 @@ function deployApps {
   elif [[ "$appsToDeploy" == "ph" ]]; then
     deployPH
   else 
-    echo -e "${RED}Please enter a valid option ${RESET}"
-    cleanUp
+    echo -e "${RED}Invalid option ${RESET}"
+    echo "Defaulting to all... "
+    deployMojaloop
+    deployPH
+    deployFineract
   fi
   addKubeConfig >> /dev/null 2>&1
   printEndMessage
