@@ -12,6 +12,7 @@ Make sure you have the following before you go through this guide.
 - 30GB+ free space in your home directory
 
 # Quick Start
+> NOTE: The deployment made by this script is meant for demo purposes and not for production
 
 ## Clone the repository
 To use Mojafos, you need to clone the repository to be able to run the software scripts.
@@ -24,10 +25,16 @@ git clone https://github.com/elijah0kello/mojafos.git
 Inside the directory run the following command to execute the script.
 
 ```
-sudo ./run.sh -u $USER -m deploy
+sudo ./run.sh -u $USER -m deploy -d true
 ```
-
-> NOTE: The deployment made by this script is meant for demo purposes and not for production
+### Options
+- `-u` This is used to pass in the user the script should use to execute it's commands. The value passed in is `$USER` which the current user of the shell
+- `-m` This option specifies the mode in which the script should execute. The available values are 
+    - `deploy` - Deploy applications
+    - `cleanup` - Undo what deploy did and clean up resources
+- `-d` This flag tells the sccript whether to execute in verbose mode or not. The available values are :
+    - true - Output should provide as much information as possible
+    - false - Output should not be minimal
 
 After running this command, it will run a few checks and then it will ask you whether you want to setup a kubernetes cluster locally or you want to connect to a remote one that is already configured using kubectl
 ```
@@ -39,7 +46,33 @@ Enter remote to use a remote cluster and enter local to let the tool create a lo
 
 After entering in your preferred option allow the script to run and deploy the softwares.
 
-At some point in the script's execution, it will ask you for the number of fineract instances you would like to deploy.
+The script will start by deploying and configuring shared infrastructure to be used by the applications. After infrastructure has been deployed, you should see the following output
+
+```bash
+============================
+Infrastructure Deployed
+============================
+```
+The script will then prompt you upon completion of deployment of infrastructure to choose what kind of deployment you would like to make. 
+
+There are three modes of deployment currently supported by Mojafos
+- Only Mojaloop `moja`
+- Only Fineract `fin`
+- Only Payment Hub `ph`
+- All Apps `all`
+
+The prompt will look like this.
+```bash
+What would you like to Deploy? all/moja/fin/ph 
+```
+
+At the prompt type the mode you would like to use. 
+
+After typing in the short code to represnt the mode you would want to install, the script will proceed to execute the installation as instructed.
+
+If you enter invalide input, the script will default to deploying all apps.
+
+If you chose `fin` or `all`, at some point in the script's execution, it will ask you for the number of fineract instances you would like to deploy.
 
 ```
 How many instances of fineract would you like to deploy? Enter number:
@@ -71,7 +104,17 @@ kubectl get pods -n fineract-n #For testing fineract. n is a number of a finerac
 Copyright © 2023 The Mifos Initiative
 ```
 
-## WHAT HAS NOT YET BEEN DONE
-- Clear logging and providing option for verbosity
-- Proper function return codes to support proper exception handling
+## USING THE DEPLOYED APPS
+TDB
+
+## CONTRIBUTION
+ TBD
+
+## CONCLUSION
+
+This tool is intended to simplify the deployment process for Payment Hub EE, Mojaloop and Fineract for testing purposes.
+
+
+
+
 
