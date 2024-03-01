@@ -1,7 +1,6 @@
-### ==> Repository has been moved to a repo in Mifos Org [Mojafos](https://github.com/openMF/mojafos)
-
 # A Deployable Package for Mifos/Fineract, Payment Hub EE, and Mojaloop (Mojafos)
 
+> Repository has been moved to a repo in Mifos Org [Mojafos](https://github.com/openMF/mojafos) as such this repo is officially unmaintained. The latest version is in Mifos Org
 ## Introduction
 
 The deployable package is intended to simplify and automate the deployment process of three software applications, namely Mojaloop, PaymentHub, and Fineract, onto a Kubernetes cluster. This package aims to streamline the deployment process, reduce manual errors, and enable someone to demo how these softwares can work together. 
