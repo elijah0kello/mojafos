@@ -1,3 +1,5 @@
+### ==> Repository has been moved to a repo in Mifos Org [Mojafos](https://github.com/openMF/mojafos)
+
 # A Deployable Package for Mifos/Fineract, Payment Hub EE, and Mojaloop (Mojafos)
 
 ## Introduction
