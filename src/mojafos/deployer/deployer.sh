@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-source ./src/mojafos/configurationManager/config.sh
-
 function deployHelmChartFromDir() {
   # Check if Helm is installed
   if ! command -v helm &>/dev/null; then
